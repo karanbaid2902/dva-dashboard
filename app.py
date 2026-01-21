@@ -240,15 +240,29 @@ def generate_insights(df):
     return insights
 
 try:
-    st.info("📊 Loading dashboard data...")
     df = generate_ecommerce_data()
     
     if df.empty:
         st.error("Failed to load data")
         st.stop()
     
-    st.success("✅ Data loaded successfully!")
-    st.markdown("**Amazon.com, Inc.** | Global E-Commerce & Technology | Real-Time Business Analytics")
+    # Add Amazon logo
+    col1, col2 = st.columns([1, 5])
+    with col1:
+        st.markdown('''
+        <div style="display: flex; align-items: center; justify-content: center;">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg" width="80" alt="Amazon Logo">
+        </div>
+        ''', unsafe_allow_html=True)
+    with col2:
+        st.markdown('''
+        <div style="padding-left: 20px;">
+            <h3 style="margin: 0;">Amazon.com, Inc.</h3>
+            <p style="margin: 5px 0 0 0; color: #666;">Global E-Commerce & Technology | Real-Time Business Analytics</p>
+        </div>
+        ''', unsafe_allow_html=True)
+    
+    st.divider()
     
     st.sidebar.header("🔍 Global Filters")
     
