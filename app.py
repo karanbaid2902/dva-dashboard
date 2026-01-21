@@ -265,6 +265,17 @@ try:
     regions_filter = st.sidebar.multiselect("Regions", sorted(df['Region'].unique()), default=df['Region'].unique())
     segments_filter = st.sidebar.multiselect("Customer Segments", sorted(df['Customer_Segment'].unique()), default=df['Customer_Segment'].unique())
     
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("📥 Export Data")
+    if st.sidebar.button("📊 Download Filtered Data (CSV)"):
+        csv = filtered_df.to_csv(index=False)
+        st.sidebar.download_button(
+            label="Click to download CSV",
+            data=csv,
+            file_name=f"amazon_sales_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+            mime="text/csv"
+        )
+    
     if len(date_range) == 2:
         filtered_df = df[
             (df['Date'].dt.date >= date_range[0]) & 
