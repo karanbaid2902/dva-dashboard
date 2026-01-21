@@ -339,7 +339,7 @@ def generate_insights(df):
         insights.append(f"⭐ Satisfaction: **{avg_satisfaction:.1f}**/5")
         
         aov = df['Total_Amount'].mean()
-        insights.append(f"💳 AOV: **${aov:.2f}**")
+        insights.append(f"🛍️ AOV: **${aov:.2f}**")
     except:
         insights = ["No insights available"]
     
@@ -417,7 +417,7 @@ try:
     
     with data_quality_col2:
         duplicate_rate = (filtered_df.duplicated().sum() / len(filtered_df) * 100) if len(filtered_df) > 0 else 0
-        st.metric("🔄 Duplicates", f"{duplicate_rate:.2f}%")
+        st.metric("📄 Duplicates", f"{duplicate_rate:.2f}%")
     
     data_quality_col1, data_quality_col2 = st.sidebar.columns(2)
     with data_quality_col1:
@@ -430,7 +430,7 @@ try:
     
     tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
         "📊 Executive Dashboard",
-        "🔍 Customer Analytics", 
+        "👥 Customer Analytics", 
         "🎯 Products & Trends",
         "📊 Advanced Analysis",
         "⚡ Health Metrics",
@@ -484,6 +484,8 @@ try:
             fig = go.Figure()
             fig.add_trace(go.Scatter(x=weekly_data['Week'], y=weekly_data['Total_Amount'], name='Revenue', line=dict(color='#2E86AB', width=3), mode='lines+markers'))
             fig.add_trace(go.Scatter(x=weekly_data['Week'], y=weekly_data['Profit'], name='Profit', line=dict(color='#A23B72', width=3), mode='lines+markers'))
+            fig.update_xaxes(title_text="Week")
+            fig.update_yaxes(title_text="Amount ($)")
             fig.update_layout(hovermode='x unified', plot_bgcolor='rgba(20,20,30,0.3)', height=400)
             st.plotly_chart(fig, use_container_width=True)
         
@@ -500,6 +502,8 @@ try:
             top_products = filtered_df.groupby('Product')['Total_Amount'].sum().nlargest(10)
             fig = px.bar(x=top_products.values, y=top_products.index, orientation='h', 
                         color=top_products.values, color_continuous_scale='Blues')
+            fig.update_xaxes(title_text="Revenue ($)")
+            fig.update_yaxes(title_text="Product Name")
             fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400, showlegend=False)
             st.plotly_chart(fig, use_container_width=True)
         
@@ -509,6 +513,8 @@ try:
             for category in filtered_df['Category'].unique():
                 cat_data = filtered_df[filtered_df['Category'] == category]['Total_Amount']
                 fig.add_trace(go.Box(y=cat_data, name=category))
+            fig.update_yaxes(title_text="Revenue ($)")
+            fig.update_xaxes(title_text="Category")
             fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400)
             st.plotly_chart(fig, use_container_width=True)
         
@@ -517,6 +523,8 @@ try:
             st.markdown("### Orders by Day of Week")
             dow_data = filtered_df.groupby('Day_of_Week')['Total_Amount'].sum().reindex(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])
             fig = px.bar(x=dow_data.index, y=dow_data.values, color=dow_data.values, color_continuous_scale='Reds')
+            fig.update_xaxes(title_text="Day of Week")
+            fig.update_yaxes(title_text="Revenue ($)")
             fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400, showlegend=False)
             st.plotly_chart(fig, use_container_width=True)
         
@@ -544,6 +552,8 @@ try:
             st.markdown("### Total Value by Segment")
             seg_monetary = rfm.groupby('Segment')['Monetary'].sum().sort_values(ascending=False)
             fig = px.bar(x=seg_monetary.index, y=seg_monetary.values, color=seg_monetary.values, color_continuous_scale='Reds')
+            fig.update_xaxes(title_text="Customer Segment")
+            fig.update_yaxes(title_text="Total Value ($)")
             fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400, showlegend=False)
             st.plotly_chart(fig, use_container_width=True)
         
@@ -556,6 +566,8 @@ try:
             }).reset_index()
             fig = px.scatter(scatter_data, x='Customer_Segment', y='Satisfaction_Score', 
                            size='Total_Amount', color='Satisfaction_Score', color_continuous_scale='Greens')
+            fig.update_xaxes(title_text="Customer Segment")
+            fig.update_yaxes(title_text="Average Satisfaction Score")
             fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400)
             st.plotly_chart(fig, use_container_width=True)
         
@@ -565,9 +577,9 @@ try:
             freq_dist = freq_range.value_counts().sort_index()
             fig = px.bar(x=freq_dist.index.astype(str), y=freq_dist.values, color=freq_dist.values, 
                         color_continuous_scale='Blues')
+            fig.update_xaxes(title_text="Frequency Level")
+            fig.update_yaxes(title_text="Number of Customers")
             fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400, showlegend=False)
-            fig.update_xaxes(title="Frequency Level")
-            fig.update_yaxes(title="Number of Customers")
             st.plotly_chart(fig, use_container_width=True)
         
         col1, col2 = st.columns(2)
@@ -575,6 +587,8 @@ try:
             st.markdown("### Recency vs Frequency")
             fig = px.scatter(rfm, x='Recency', y='Frequency', color='Monetary', 
                            size='Monetary', color_continuous_scale='Viridis', hover_data=['Segment'])
+            fig.update_xaxes(title_text="Recency (Days Since Last Purchase)")
+            fig.update_yaxes(title_text="Frequency (Number of Purchases)")
             fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400)
             st.plotly_chart(fig, use_container_width=True)
         
@@ -598,6 +612,8 @@ try:
             top_products = filtered_df['Product'].value_counts().head(10)
             fig = px.bar(x=top_products.values, y=top_products.index, orientation='h', 
                         color=top_products.values, color_continuous_scale='Teal')
+            fig.update_xaxes(title_text="Number of Orders")
+            fig.update_yaxes(title_text="Product Name")
             fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400, showlegend=False)
             st.plotly_chart(fig, use_container_width=True)
         
@@ -605,6 +621,8 @@ try:
             st.markdown("### Monthly Revenue Trend")
             monthly = filtered_df.groupby('Month').agg({'Total_Amount': 'sum', 'Profit': 'sum'}).reset_index()
             fig = px.line(monthly, x='Month', y=['Total_Amount', 'Profit'], markers=True)
+            fig.update_xaxes(title_text="Month")
+            fig.update_yaxes(title_text="Amount ($)")
             fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', hovermode='x unified', height=400)
             st.plotly_chart(fig, use_container_width=True)
         
@@ -613,6 +631,8 @@ try:
             st.markdown("### Category Performance (Funnel)")
             cat_orders = filtered_df.groupby('Category')['Order_ID'].count().sort_values(ascending=False)
             fig = px.funnel(x=cat_orders.values, y=cat_orders.index)
+            fig.update_xaxes(title_text="Number of Orders")
+            fig.update_yaxes(title_text="Category")
             fig.update_traces(marker_color='#2E86AB')
             fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400)
             st.plotly_chart(fig, use_container_width=True)
@@ -620,6 +640,8 @@ try:
         with col2:
             st.markdown("### Profit Margin Distribution")
             fig = px.box(filtered_df, x='Category', y='Profit_Margin', color='Category')
+            fig.update_xaxes(title_text="Category")
+            fig.update_yaxes(title_text="Profit Margin (%)")
             fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400, showlegend=False)
             st.plotly_chart(fig, use_container_width=True)
         
@@ -634,6 +656,8 @@ try:
             fig = px.bar(abc_df, x='Revenue', y='Product', color='Class', 
                         color_discrete_map={'A': '#4CAF50', 'B': '#FFC107', 'C': '#F44336'}, 
                         orientation='h')
+            fig.update_xaxes(title_text="Revenue ($)")
+            fig.update_yaxes(title_text="Product Name")
             fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400)
             st.plotly_chart(fig, use_container_width=True)
         
@@ -641,6 +665,8 @@ try:
             st.markdown("### Profit Margin by Category")
             margin_by_cat = filtered_df.groupby('Category')['Profit_Margin'].mean().sort_values(ascending=False)
             fig = px.bar(x=margin_by_cat.index, y=margin_by_cat.values, color=margin_by_cat.values, color_continuous_scale='RdYlGn')
+            fig.update_xaxes(title_text="Category")
+            fig.update_yaxes(title_text="Average Profit Margin (%)")
             fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400, showlegend=False)
             st.plotly_chart(fig, use_container_width=True)
     
@@ -659,6 +685,8 @@ try:
             st.markdown("### Region Revenue (Bar)")
             region_revenue = filtered_df.groupby('Region')['Total_Amount'].sum().sort_values(ascending=False)
             fig = px.bar(x=region_revenue.index, y=region_revenue.values, color=region_revenue.values, color_continuous_scale='Blues')
+            fig.update_xaxes(title_text="Region")
+            fig.update_yaxes(title_text="Revenue ($)")
             fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400, showlegend=False)
             st.plotly_chart(fig, use_container_width=True)
         
@@ -672,6 +700,8 @@ try:
             fig = px.scatter(corr_data, x='Total_Amount', y='Satisfaction_Score', 
                            size='Satisfaction_Score', color='Satisfaction_Score',
                            color_continuous_scale='Greens', text='Region')
+            fig.update_xaxes(title_text="Total Revenue ($)")
+            fig.update_yaxes(title_text="Average Satisfaction Score")
             fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400)
             st.plotly_chart(fig, use_container_width=True)
         
@@ -681,6 +711,8 @@ try:
                 lambda x: (x.sum() / len(x) * 100)).sort_values(ascending=False)
             fig = px.bar(x=return_by_region.index, y=return_by_region.values, 
                         color=return_by_region.values, color_continuous_scale='Reds')
+            fig.update_xaxes(title_text="Region")
+            fig.update_yaxes(title_text="Return Rate (%)")
             fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400, showlegend=False)
             st.plotly_chart(fig, use_container_width=True)
         
@@ -692,6 +724,8 @@ try:
             fig = go.Figure()
             for col in segment_cat.columns:
                 fig.add_trace(go.Bar(x=segment_cat.index, y=segment_cat[col], name=col))
+            fig.update_xaxes(title_text="Customer Segment")
+            fig.update_yaxes(title_text="Revenue ($)")
             fig.update_layout(barmode='group', plot_bgcolor='rgba(20,20,30,0.3)', height=350)
             st.plotly_chart(fig, use_container_width=True)
         
@@ -700,6 +734,8 @@ try:
             st.markdown("### Satisfaction by Segment")
             satisfaction = filtered_df.groupby('Customer_Segment')['Satisfaction_Score'].mean().sort_values(ascending=False)
             fig = px.bar(x=satisfaction.index, y=satisfaction.values, color=satisfaction.values, color_continuous_scale='Greens')
+            fig.update_xaxes(title_text="Customer Segment")
+            fig.update_yaxes(title_text="Average Satisfaction Score")
             fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400, showlegend=False)
             st.plotly_chart(fig, use_container_width=True)
         
@@ -709,6 +745,8 @@ try:
             fig = go.Figure()
             fig.add_trace(go.Bar(x=region_comp.index, y=region_comp['Total_Amount'], name='Revenue'))
             fig.add_trace(go.Bar(x=region_comp.index, y=region_comp['Profit'], name='Profit'))
+            fig.update_xaxes(title_text="Region")
+            fig.update_yaxes(title_text="Amount ($)")
             fig.update_layout(barmode='group', plot_bgcolor='rgba(20,20,30,0.3)', height=400)
             st.plotly_chart(fig, use_container_width=True)
     
@@ -737,6 +775,8 @@ try:
             st.markdown("### LTV Distribution (Histogram)")
             ltv = calculate_ltv(filtered_df)
             fig = px.histogram(ltv, x='LTV', nbins=50, color_discrete_sequence=['#2E86AB'])
+            fig.update_xaxes(title_text="Customer Lifetime Value ($)")
+            fig.update_yaxes(title_text="Number of Customers")
             fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400)
             st.plotly_chart(fig, use_container_width=True)
         
@@ -751,6 +791,8 @@ try:
             
             fig = px.bar(health_scores, x='Category', y='Health', color='Health', 
                         color_continuous_scale='RdYlGn', text='Health')
+            fig.update_xaxes(title_text="Category")
+            fig.update_yaxes(title_text="Health Score (%)")
             fig.update_traces(texttemplate='%{text:.1f}%', textposition='auto')
             fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400, showlegend=False)
             st.plotly_chart(fig, use_container_width=True)
@@ -767,6 +809,8 @@ try:
             
             fig = px.scatter(returns_data, x='ReturnRate', y='Revenue', size='Orders', 
                            color='ReturnRate', text='Category', color_continuous_scale='Reds')
+            fig.update_xaxes(title_text="Return Rate (%)")
+            fig.update_yaxes(title_text="Revenue ($)")
             fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400)
             st.plotly_chart(fig, use_container_width=True)
         
@@ -775,6 +819,8 @@ try:
             monthly_revenue = filtered_df.groupby('Month')['Total_Amount'].sum()
             fig = px.line(x=monthly_revenue.index, y=monthly_revenue.values, markers=True, 
                          color_discrete_sequence=['#2E86AB'])
+            fig.update_xaxes(title_text="Month")
+            fig.update_yaxes(title_text="Revenue ($)")
             fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400)
             st.plotly_chart(fig, use_container_width=True)
     
@@ -804,6 +850,8 @@ try:
                     line=dict(color='#F18F01', width=2, dash='dash')
                 ))
             
+            fig.update_xaxes(title_text="Date")
+            fig.update_yaxes(title_text="Revenue ($)")
             fig.update_layout(
                 plot_bgcolor='rgba(20,20,30,0.3)',
                 hovermode='x unified',
@@ -829,6 +877,8 @@ try:
                     color='Type',
                     color_discrete_map={'High': '#28a745', 'Low': '#dc3545'}
                 )
+                fig.update_xaxes(title_text="Date")
+                fig.update_yaxes(title_text="Revenue ($)")
                 fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400)
                 st.plotly_chart(fig, use_container_width=True)
             else:
@@ -852,6 +902,8 @@ try:
                         fill='tozeroy'
                     ))
             
+            fig.update_xaxes(title_text="Date")
+            fig.update_yaxes(title_text="Revenue ($)")
             fig.update_layout(
                 plot_bgcolor='rgba(20,20,30,0.3)',
                 hovermode='x unified',
@@ -877,6 +929,8 @@ try:
             seg_df = pd.DataFrame(segment_summary)
             fig = px.bar(seg_df, x='Segment', y='Current Revenue', color='Trend',
                         color_discrete_map={'Up': '#28a745', 'Down': '#dc3545'})
+            fig.update_xaxes(title_text="Customer Segment")
+            fig.update_yaxes(title_text="Average Revenue ($)")
             fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400)
             st.plotly_chart(fig, use_container_width=True)
         
