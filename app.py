@@ -11,7 +11,7 @@ import io
 
 st.set_page_config(
     page_title="Amazon - Analytics Dashboard",
-    page_icon="ðŸ“Š",
+    page_icon="📊",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -22,7 +22,7 @@ def get_plot_config():
     return {'responsive': True, 'displayModeBar': False}
 
 # Theme and styling with enhanced customization
-theme_color = st.sidebar.selectbox("ðŸŽ¨ Dashboard Theme", ["Light", "Dark", "Ocean", "Forest", "Sunset"], key="theme")
+theme_color = st.sidebar.selectbox("🎨 Dashboard Theme", ["Light", "Dark", "Ocean", "Forest", "Sunset"], key="theme")
 
 theme_styles = {
     "Light": """
@@ -321,25 +321,25 @@ def generate_insights(df):
     try:
         top_category = df.groupby('Category')['Total_Amount'].sum().idxmax()
         top_cat_pct = (df[df['Category'] == top_category]['Total_Amount'].sum() / df['Total_Amount'].sum() * 100)
-        insights.append(f"ðŸ“ˆ **{top_category}** leads with {top_cat_pct:.1f}% of revenue")
+        insights.append(f"📈 **{top_category}** leads with {top_cat_pct:.1f}% of revenue")
         
         top_region = df.groupby('Region')['Total_Amount'].sum().idxmax()
-        insights.append(f"ðŸŒ **{top_region}** is top region")
+        insights.append(f"🌍 **{top_region}** is top region")
         
         # Calculate margin as profit/revenue, not average of Profit_Margin column
         total_profit = df['Profit'].sum()
         total_revenue = df['Total_Amount'].sum()
         profit_margin = (total_profit / total_revenue * 100) if total_revenue > 0 else 0
-        insights.append(f"ðŸ’¹ Profit margin: **{profit_margin:.1f}%**")
+        insights.append(f"💹 Profit margin: **{profit_margin:.1f}%**")
         
         return_rate = (df['Is_Returned'].sum() / len(df) * 100)
-        insights.append(f"ðŸ“¦ Return rate: **{return_rate:.1f}%**")
+        insights.append(f"📦 Return rate: **{return_rate:.1f}%**")
         
         avg_satisfaction = df['Satisfaction_Score'].mean()
-        insights.append(f"â­ Satisfaction: **{avg_satisfaction:.1f}**/5")
+        insights.append(f"⭐ Satisfaction: **{avg_satisfaction:.1f}**/5")
         
         aov = df['Total_Amount'].mean()
-        insights.append(f"ðŸ’³ AOV: **${aov:.2f}**")
+        insights.append(f"💳 AOV: **${aov:.2f}**")
     except:
         insights = ["No insights available"]
     
@@ -354,7 +354,7 @@ try:
     
     st.markdown("**Amazon.com, Inc.** | Global E-Commerce & Technology | Real-Time Business Analytics")
     
-    st.sidebar.header("ðŸ” Global Filters")
+    st.sidebar.header("🔍 Global Filters")
     
     min_date = df['Date'].min().date()
     max_date = df['Date'].max().date()
@@ -364,7 +364,7 @@ try:
     regions_filter = st.sidebar.multiselect("Regions", sorted(df['Region'].unique()), default=df['Region'].unique())
     segments_filter = st.sidebar.multiselect("Customer Segments", sorted(df['Customer_Segment'].unique()), default=df['Customer_Segment'].unique())
     
-    enable_comparison = st.sidebar.checkbox("ðŸ“Š Compare with Previous Period", value=False)
+    enable_comparison = st.sidebar.checkbox("📊 Compare with Previous Period", value=False)
     comparison_period_days = st.sidebar.slider("Period Length (days)", min_value=7, max_value=180, value=30) if enable_comparison else 0
     
     if len(date_range) == 2:
@@ -397,8 +397,8 @@ try:
         comparison_df = pd.DataFrame()
     
     st.sidebar.markdown("---")
-    st.sidebar.subheader("ðŸ“¥ Export Data")
-    if st.sidebar.button("ðŸ“Š Download Filtered Data (CSV)"):
+    st.sidebar.subheader("📥 Export Data")
+    if st.sidebar.button("📊 Download Filtered Data (CSV)"):
         csv = filtered_df.to_csv(index=False)
         st.sidebar.download_button(
             label="Click to download CSV",
@@ -408,33 +408,33 @@ try:
         )
     
     st.sidebar.markdown("---")
-    st.sidebar.subheader("ðŸ“Š Data Quality")
+    st.sidebar.subheader("📊 Data Quality")
     
     data_quality_col1, data_quality_col2 = st.sidebar.columns(2)
     with data_quality_col1:
         completeness = (1 - (filtered_df.isnull().sum().sum() / (len(filtered_df) * len(filtered_df.columns)))) * 100
-        st.metric("âœ… Completeness", f"{completeness:.1f}%")
+        st.metric("✅ Completeness", f"{completeness:.1f}%")
     
     with data_quality_col2:
         duplicate_rate = (filtered_df.duplicated().sum() / len(filtered_df) * 100) if len(filtered_df) > 0 else 0
-        st.metric("ðŸ”„ Duplicates", f"{duplicate_rate:.2f}%")
+        st.metric("🔄 Duplicates", f"{duplicate_rate:.2f}%")
     
     data_quality_col1, data_quality_col2 = st.sidebar.columns(2)
     with data_quality_col1:
         total_records = len(filtered_df)
-        st.metric("ðŸ“¦ Records", f"{total_records:,}")
+        st.metric("📦 Records", f"{total_records:,}")
     
     with data_quality_col2:
         date_range_days = (filtered_df['Date'].max() - filtered_df['Date'].min()).days
-        st.metric("ðŸ“… Date Range", f"{date_range_days} days")
+        st.metric("📅 Date Range", f"{date_range_days} days")
     
     tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
-        "ðŸ“Š Executive Dashboard",
-        "ðŸ” Customer Analytics", 
-        "ðŸŽ¯ Products & Trends",
-        "ðŸ“Š Advanced Analysis",
-        "âš¡ Health Metrics",
-        "ðŸ”® Forecasting"
+        "📊 Executive Dashboard",
+        "🔍 Customer Analytics", 
+        "🎯 Products & Trends",
+        "📊 Advanced Analysis",
+        "⚡ Health Metrics",
+        "🔮 Forecasting"
     ])
     
     with tab1:
@@ -454,19 +454,19 @@ try:
             profit_change = None
         
         with col1:
-            st.metric("ðŸ’° Revenue", f"${total_revenue:,.0f}", delta=f"{revenue_change:.1f}%" if revenue_change is not None else None)
+            st.metric("💰 Revenue", f"${total_revenue:,.0f}", delta=f"{revenue_change:.1f}%" if revenue_change is not None else None)
         with col2:
-            st.metric("ðŸ“ˆ Profit", f"${total_profit:,.0f}", delta=f"{profit_change:.1f}%" if profit_change is not None else None)
+            st.metric("📈 Profit", f"${total_profit:,.0f}", delta=f"{profit_change:.1f}%" if profit_change is not None else None)
         with col3:
-            st.metric("ðŸ“¦ Orders", f"{len(filtered_df):,}")
+            st.metric("📦 Orders", f"{len(filtered_df):,}")
         with col4:
-            st.metric("ðŸ‘¥ Customers", f"{filtered_df['Customer_ID'].nunique():,}")
+            st.metric("👥 Customers", f"{filtered_df['Customer_ID'].nunique():,}")
         with col5:
-            st.metric("ðŸ’¹ Margin %", f"{(total_profit/total_revenue*100):.1f}%")
+            st.metric("💹 Margin %", f"{(total_profit/total_revenue*100):.1f}%")
         
         st.markdown("---")
         
-        st.markdown("### ðŸ’¡ Key Insights")
+        st.markdown("### 💡 Key Insights")
         insights = generate_insights(filtered_df)
         cols = st.columns(3)
         for idx, insight in enumerate(insights):
@@ -722,13 +722,13 @@ try:
         nps = filtered_df['Satisfaction_Score'].mean()
         
         with col1:
-            st.metric("ðŸ“¦ Orders", f"{total_orders:,}")
+            st.metric("📦 Orders", f"{total_orders:,}")
         with col2:
-            st.metric("ðŸ‘¥ Customers", f"{unique_customers:,}")
+            st.metric("👥 Customers", f"{unique_customers:,}")
         with col3:
-            st.metric("ðŸ’° COGS", f"${cogs:,.0f}")
+            st.metric("💰 COGS", f"${cogs:,.0f}")
         with col4:
-            st.metric("â­ Satisfaction", f"{nps:.1f}/5.0")
+            st.metric("⭐ Satisfaction", f"{nps:.1f}/5.0")
         
         st.markdown("---")
         
@@ -832,7 +832,7 @@ try:
                 fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400)
                 st.plotly_chart(fig, use_container_width=True)
             else:
-                st.info("âœ… No anomalies detected")
+                st.info("✅ No anomalies detected")
         
         col1, col2 = st.columns(2)
         with col1:
@@ -893,13 +893,13 @@ try:
             
             metric_col1, metric_col2, metric_col3, metric_col4 = st.columns(4)
             with metric_col1:
-                st.metric("ðŸ“ˆ Historical Avg", f"${avg_historical:,.0f}")
+                st.metric("📈 Historical Avg", f"${avg_historical:,.0f}")
             with metric_col2:
-                st.metric("ðŸ”® Forecast Avg", f"${avg_forecast:,.0f}")
+                st.metric("🔮 Forecast Avg", f"${avg_forecast:,.0f}")
             with metric_col3:
-                st.metric("ðŸ“Š Growth Rate", f"{growth_rate:.1f}%")
+                st.metric("📊 Growth Rate", f"{growth_rate:.1f}%")
             with metric_col4:
-                st.metric("ðŸš¨ Anomalies", f"{anomaly_count}")
+                st.metric("🚨 Anomalies", f"{anomaly_count}")
 
 except Exception as e:
     st.error(f"Error: {str(e)}")
