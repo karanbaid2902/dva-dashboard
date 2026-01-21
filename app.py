@@ -8,11 +8,21 @@ import warnings
 warnings.filterwarnings('ignore')
 
 st.set_page_config(
-    page_title="Amazon - Analytics Dashboard",
+    page_title="Analytics Dashboard",
     page_icon="📊",
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# Add Amazon logo at the very top
+st.markdown('''
+<div style="display: flex; align-items: center; justify-content: center; margin-bottom: 20px;">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg" width="120" alt="Amazon Logo">
+</div>
+''', unsafe_allow_html=True)
+
+st.markdown('<h1 style="text-align: center; margin-top: -10px;">Sales & Analytics Dashboard</h1>', unsafe_allow_html=True)
+st.divider()
 
 # Theme and styling
 theme_color = st.sidebar.selectbox("🎨 Dashboard Theme", ["Light", "Dark", "Ocean", "Forest", "Sunset"], key="theme")
@@ -245,24 +255,6 @@ try:
     if df.empty:
         st.error("Failed to load data")
         st.stop()
-    
-    # Add Amazon logo
-    col1, col2 = st.columns([1, 5])
-    with col1:
-        st.markdown('''
-        <div style="display: flex; align-items: center; justify-content: center;">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg" width="80" alt="Amazon Logo">
-        </div>
-        ''', unsafe_allow_html=True)
-    with col2:
-        st.markdown('''
-        <div style="padding-left: 20px;">
-            <h3 style="margin: 0;">Amazon.com, Inc.</h3>
-            <p style="margin: 5px 0 0 0; color: #666;">Global E-Commerce & Technology | Real-Time Business Analytics</p>
-        </div>
-        ''', unsafe_allow_html=True)
-    
-    st.divider()
     
     st.sidebar.header("🔍 Global Filters")
     
