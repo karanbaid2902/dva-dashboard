@@ -21,7 +21,6 @@ st.markdown('''
 </div>
 ''', unsafe_allow_html=True)
 
-st.markdown('<h1 style="text-align: center; margin-top: -10px;">Sales & Analytics Dashboard</h1>', unsafe_allow_html=True)
 st.divider()
 
 # Theme and styling
