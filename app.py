@@ -11,7 +11,7 @@ import io
 
 st.set_page_config(
     page_title="Amazon - Analytics Dashboard",
-    page_icon="📊",
+    page_icon="ðŸ“Š",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -22,7 +22,7 @@ def get_plot_config():
     return {'responsive': True, 'displayModeBar': False}
 
 # Theme and styling with enhanced customization
-theme_color = st.sidebar.selectbox("🎨 Dashboard Theme", ["Light", "Dark", "Ocean", "Forest", "Sunset"], key="theme")
+theme_color = st.sidebar.selectbox("ðŸŽ¨ Dashboard Theme", ["Light", "Dark", "Ocean", "Forest", "Sunset"], key="theme")
 
 theme_styles = {
     "Light": """
@@ -321,25 +321,25 @@ def generate_insights(df):
     try:
         top_category = df.groupby('Category')['Total_Amount'].sum().idxmax()
         top_cat_pct = (df[df['Category'] == top_category]['Total_Amount'].sum() / df['Total_Amount'].sum() * 100)
-        insights.append(f"📈 **{top_category}** leads with {top_cat_pct:.1f}% of revenue")
+        insights.append(f"ðŸ“ˆ **{top_category}** leads with {top_cat_pct:.1f}% of revenue")
         
         top_region = df.groupby('Region')['Total_Amount'].sum().idxmax()
-        insights.append(f"🌍 **{top_region}** is top region")
+        insights.append(f"ðŸŒ **{top_region}** is top region")
         
         # Calculate margin as profit/revenue, not average of Profit_Margin column
         total_profit = df['Profit'].sum()
         total_revenue = df['Total_Amount'].sum()
         profit_margin = (total_profit / total_revenue * 100) if total_revenue > 0 else 0
-        insights.append(f"💹 Profit margin: **{profit_margin:.1f}%**")
+        insights.append(f"ðŸ’¹ Profit margin: **{profit_margin:.1f}%**")
         
         return_rate = (df['Is_Returned'].sum() / len(df) * 100)
-        insights.append(f"📦 Return rate: **{return_rate:.1f}%**")
+        insights.append(f"ðŸ“¦ Return rate: **{return_rate:.1f}%**")
         
         avg_satisfaction = df['Satisfaction_Score'].mean()
-        insights.append(f"⭐ Satisfaction: **{avg_satisfaction:.1f}**/5")
+        insights.append(f"â­ Satisfaction: **{avg_satisfaction:.1f}**/5")
         
         aov = df['Total_Amount'].mean()
-        insights.append(f"🛍️ AOV: **${aov:.2f}**")
+        insights.append(f"ðŸ’³ AOV: **${aov:.2f}**")
     except:
         insights = ["No insights available"]
     
@@ -354,7 +354,7 @@ try:
     
     st.markdown("**Amazon.com, Inc.** | Global E-Commerce & Technology | Real-Time Business Analytics")
     
-    st.sidebar.header("🔍 Global Filters")
+    st.sidebar.header("ðŸ” Global Filters")
     
     min_date = df['Date'].min().date()
     max_date = df['Date'].max().date()
@@ -364,7 +364,7 @@ try:
     regions_filter = st.sidebar.multiselect("Regions", sorted(df['Region'].unique()), default=df['Region'].unique())
     segments_filter = st.sidebar.multiselect("Customer Segments", sorted(df['Customer_Segment'].unique()), default=df['Customer_Segment'].unique())
     
-    enable_comparison = st.sidebar.checkbox("📊 Compare with Previous Period", value=False)
+    enable_comparison = st.sidebar.checkbox("ðŸ“Š Compare with Previous Period", value=False)
     comparison_period_days = st.sidebar.slider("Period Length (days)", min_value=7, max_value=180, value=30) if enable_comparison else 0
     
     if len(date_range) == 2:
@@ -397,8 +397,8 @@ try:
         comparison_df = pd.DataFrame()
     
     st.sidebar.markdown("---")
-    st.sidebar.subheader("📥 Export Data")
-    if st.sidebar.button("📊 Download Filtered Data (CSV)"):
+    st.sidebar.subheader("ðŸ“¥ Export Data")
+    if st.sidebar.button("ðŸ“Š Download Filtered Data (CSV)"):
         csv = filtered_df.to_csv(index=False)
         st.sidebar.download_button(
             label="Click to download CSV",
@@ -408,33 +408,33 @@ try:
         )
     
     st.sidebar.markdown("---")
-    st.sidebar.subheader("📊 Data Quality")
+    st.sidebar.subheader("ðŸ“Š Data Quality")
     
     data_quality_col1, data_quality_col2 = st.sidebar.columns(2)
     with data_quality_col1:
         completeness = (1 - (filtered_df.isnull().sum().sum() / (len(filtered_df) * len(filtered_df.columns)))) * 100
-        st.metric("✅ Completeness", f"{completeness:.1f}%")
+        st.metric("âœ… Completeness", f"{completeness:.1f}%")
     
     with data_quality_col2:
         duplicate_rate = (filtered_df.duplicated().sum() / len(filtered_df) * 100) if len(filtered_df) > 0 else 0
-        st.metric("📄 Duplicates", f"{duplicate_rate:.2f}%")
+        st.metric("ðŸ”„ Duplicates", f"{duplicate_rate:.2f}%")
     
     data_quality_col1, data_quality_col2 = st.sidebar.columns(2)
     with data_quality_col1:
         total_records = len(filtered_df)
-        st.metric("📦 Records", f"{total_records:,}")
+        st.metric("ðŸ“¦ Records", f"{total_records:,}")
     
     with data_quality_col2:
         date_range_days = (filtered_df['Date'].max() - filtered_df['Date'].min()).days
-        st.metric("📅 Date Range", f"{date_range_days} days")
+        st.metric("ðŸ“… Date Range", f"{date_range_days} days")
     
     tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
-        "📊 Executive Dashboard",
-        "👥 Customer Analytics", 
-        "🎯 Products & Trends",
-        "📊 Advanced Analysis",
-        "⚡ Health Metrics",
-        "🔮 Forecasting"
+        "ðŸ“Š Executive Dashboard",
+        "ðŸ” Customer Analytics", 
+        "ðŸŽ¯ Products & Trends",
+        "ðŸ“Š Advanced Analysis",
+        "âš¡ Health Metrics",
+        "ðŸ”® Forecasting"
     ])
     
     with tab1:
@@ -454,19 +454,19 @@ try:
             profit_change = None
         
         with col1:
-            st.metric("💰 Revenue", f"${total_revenue:,.0f}", delta=f"{revenue_change:.1f}%" if revenue_change is not None else None)
+            st.metric("ðŸ’° Revenue", f"${total_revenue:,.0f}", delta=f"{revenue_change:.1f}%" if revenue_change is not None else None)
         with col2:
-            st.metric("📈 Profit", f"${total_profit:,.0f}", delta=f"{profit_change:.1f}%" if profit_change is not None else None)
+            st.metric("ðŸ“ˆ Profit", f"${total_profit:,.0f}", delta=f"{profit_change:.1f}%" if profit_change is not None else None)
         with col3:
-            st.metric("📦 Orders", f"{len(filtered_df):,}")
+            st.metric("ðŸ“¦ Orders", f"{len(filtered_df):,}")
         with col4:
-            st.metric("👥 Customers", f"{filtered_df['Customer_ID'].nunique():,}")
+            st.metric("ðŸ‘¥ Customers", f"{filtered_df['Customer_ID'].nunique():,}")
         with col5:
-            st.metric("💹 Margin %", f"{(total_profit/total_revenue*100):.1f}%")
+            st.metric("ðŸ’¹ Margin %", f"{(total_profit/total_revenue*100):.1f}%")
         
         st.markdown("---")
         
-        st.markdown("### 💡 Key Insights")
+        st.markdown("### ðŸ’¡ Key Insights")
         insights = generate_insights(filtered_df)
         cols = st.columns(3)
         for idx, insight in enumerate(insights):
@@ -484,8 +484,6 @@ try:
             fig = go.Figure()
             fig.add_trace(go.Scatter(x=weekly_data['Week'], y=weekly_data['Total_Amount'], name='Revenue', line=dict(color='#2E86AB', width=3), mode='lines+markers'))
             fig.add_trace(go.Scatter(x=weekly_data['Week'], y=weekly_data['Profit'], name='Profit', line=dict(color='#A23B72', width=3), mode='lines+markers'))
-            fig.update_xaxes(title_text="Week")
-            fig.update_yaxes(title_text="Amount ($)")
             fig.update_layout(hovermode='x unified', plot_bgcolor='rgba(20,20,30,0.3)', height=400)
             st.plotly_chart(fig, use_container_width=True)
         
@@ -502,8 +500,6 @@ try:
             top_products = filtered_df.groupby('Product')['Total_Amount'].sum().nlargest(10)
             fig = px.bar(x=top_products.values, y=top_products.index, orientation='h', 
                         color=top_products.values, color_continuous_scale='Blues')
-            fig.update_xaxes(title_text="Revenue ($)")
-            fig.update_yaxes(title_text="Product Name")
             fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400, showlegend=False)
             st.plotly_chart(fig, use_container_width=True)
         
@@ -513,8 +509,6 @@ try:
             for category in filtered_df['Category'].unique():
                 cat_data = filtered_df[filtered_df['Category'] == category]['Total_Amount']
                 fig.add_trace(go.Box(y=cat_data, name=category))
-            fig.update_yaxes(title_text="Revenue ($)")
-            fig.update_xaxes(title_text="Category")
             fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400)
             st.plotly_chart(fig, use_container_width=True)
         
@@ -523,8 +517,6 @@ try:
             st.markdown("### Orders by Day of Week")
             dow_data = filtered_df.groupby('Day_of_Week')['Total_Amount'].sum().reindex(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])
             fig = px.bar(x=dow_data.index, y=dow_data.values, color=dow_data.values, color_continuous_scale='Reds')
-            fig.update_xaxes(title_text="Day of Week")
-            fig.update_yaxes(title_text="Revenue ($)")
             fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400, showlegend=False)
             st.plotly_chart(fig, use_container_width=True)
         
@@ -552,8 +544,6 @@ try:
             st.markdown("### Total Value by Segment")
             seg_monetary = rfm.groupby('Segment')['Monetary'].sum().sort_values(ascending=False)
             fig = px.bar(x=seg_monetary.index, y=seg_monetary.values, color=seg_monetary.values, color_continuous_scale='Reds')
-            fig.update_xaxes(title_text="Customer Segment")
-            fig.update_yaxes(title_text="Total Value ($)")
             fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400, showlegend=False)
             st.plotly_chart(fig, use_container_width=True)
         
@@ -566,8 +556,6 @@ try:
             }).reset_index()
             fig = px.scatter(scatter_data, x='Customer_Segment', y='Satisfaction_Score', 
                            size='Total_Amount', color='Satisfaction_Score', color_continuous_scale='Greens')
-            fig.update_xaxes(title_text="Customer Segment")
-            fig.update_yaxes(title_text="Average Satisfaction Score")
             fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400)
             st.plotly_chart(fig, use_container_width=True)
         
@@ -577,11 +565,343 @@ try:
             freq_dist = freq_range.value_counts().sort_index()
             fig = px.bar(x=freq_dist.index.astype(str), y=freq_dist.values, color=freq_dist.values, 
                         color_continuous_scale='Blues')
-            fig.update_xaxes(title_text="Frequency Level")
-            fig.update_yaxes(title_text="Number of Customers")
+            fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400, showlegend=False)
+            fig.update_xaxes(title="Frequency Level")
+            fig.update_yaxes(title="Number of Customers")
+            st.plotly_chart(fig, use_container_width=True)
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown("### Recency vs Frequency")
+            fig = px.scatter(rfm, x='Recency', y='Frequency', color='Monetary', 
+                           size='Monetary', color_continuous_scale='Viridis', hover_data=['Segment'])
+            fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400)
+            st.plotly_chart(fig, use_container_width=True)
+        
+        with col2:
+            st.markdown("### Segment Performance Table")
+            segment_perf = filtered_df.groupby('Customer_Segment').agg({
+                'Total_Amount': 'sum',
+                'Profit': 'sum',
+                'Order_ID': 'count',
+                'Satisfaction_Score': 'mean'
+            }).round(2)
+            segment_perf.columns = ['Revenue', 'Profit', 'Orders', 'Satisfaction']
+            st.dataframe(segment_perf, use_container_width=True)
+    
+    with tab3:
+        st.markdown("## Products & Trends")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown("### Top 10 Best-Selling Products")
+            top_products = filtered_df['Product'].value_counts().head(10)
+            fig = px.bar(x=top_products.values, y=top_products.index, orientation='h', 
+                        color=top_products.values, color_continuous_scale='Teal')
+            fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400, showlegend=False)
+            st.plotly_chart(fig, use_container_width=True)
+        
+        with col2:
+            st.markdown("### Monthly Revenue Trend")
+            monthly = filtered_df.groupby('Month').agg({'Total_Amount': 'sum', 'Profit': 'sum'}).reset_index()
+            fig = px.line(monthly, x='Month', y=['Total_Amount', 'Profit'], markers=True)
+            fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', hovermode='x unified', height=400)
+            st.plotly_chart(fig, use_container_width=True)
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown("### Category Performance (Funnel)")
+            cat_orders = filtered_df.groupby('Category')['Order_ID'].count().sort_values(ascending=False)
+            fig = px.funnel(x=cat_orders.values, y=cat_orders.index)
+            fig.update_traces(marker_color='#2E86AB')
+            fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400)
+            st.plotly_chart(fig, use_container_width=True)
+        
+        with col2:
+            st.markdown("### Profit Margin Distribution")
+            fig = px.box(filtered_df, x='Category', y='Profit_Margin', color='Category')
+            fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400, showlegend=False)
+            st.plotly_chart(fig, use_container_width=True)
+        
+        col1 = st.columns(1)[0]
+        with col1:
+            st.markdown("### ABC Classification")
+            product_rev = filtered_df.groupby('Product')['Total_Amount'].sum().sort_values(ascending=False).head(15)
+            cumsum = product_rev.cumsum()
+            cumsum_pct = (cumsum / cumsum.iloc[-1]) * 100
+            abc_class = ['A' if p <= 80 else ('B' if p <= 95 else 'C') for p in cumsum_pct]
+            abc_df = pd.DataFrame({'Product': product_rev.index, 'Revenue': product_rev.values, 'Class': abc_class})
+            fig = px.bar(abc_df, x='Revenue', y='Product', color='Class', 
+                        color_discrete_map={'A': '#4CAF50', 'B': '#FFC107', 'C': '#F44336'}, 
+                        orientation='h')
+            fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400)
+            st.plotly_chart(fig, use_container_width=True)
+        
+        with col2:
+            st.markdown("### Profit Margin by Category")
+            margin_by_cat = filtered_df.groupby('Category')['Profit_Margin'].mean().sort_values(ascending=False)
+            fig = px.bar(x=margin_by_cat.index, y=margin_by_cat.values, color=margin_by_cat.values, color_continuous_scale='RdYlGn')
+            fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400, showlegend=False)
+            st.plotly_chart(fig, use_container_width=True)
+    
+    with tab4:
+        st.markdown("## Advanced Analytics")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown("### Revenue by Category (Pie)")
+            cat_revenue = filtered_df.groupby('Category')['Total_Amount'].sum().sort_values(ascending=False)
+            fig = px.pie(values=cat_revenue.values, names=cat_revenue.index, hole=0.3)
+            fig.update_layout(height=400)
+            st.plotly_chart(fig, use_container_width=True)
+        
+        with col2:
+            st.markdown("### Region Revenue (Bar)")
+            region_revenue = filtered_df.groupby('Region')['Total_Amount'].sum().sort_values(ascending=False)
+            fig = px.bar(x=region_revenue.index, y=region_revenue.values, color=region_revenue.values, color_continuous_scale='Blues')
             fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400, showlegend=False)
             st.plotly_chart(fig, use_container_width=True)
         
         col1, col2 = st.columns(2)
         with col1:
-            st.markdown("### Recency vs Frequency
+            st.markdown("### Satisfaction Correlation")
+            corr_data = filtered_df.groupby('Region').agg({
+                'Satisfaction_Score': 'mean',
+                'Total_Amount': 'sum'
+            }).reset_index()
+            fig = px.scatter(corr_data, x='Total_Amount', y='Satisfaction_Score', 
+                           size='Satisfaction_Score', color='Satisfaction_Score',
+                           color_continuous_scale='Greens', text='Region')
+            fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400)
+            st.plotly_chart(fig, use_container_width=True)
+        
+        with col2:
+            st.markdown("### Return Rate by Region")
+            return_by_region = filtered_df.groupby('Region')['Is_Returned'].apply(
+                lambda x: (x.sum() / len(x) * 100)).sort_values(ascending=False)
+            fig = px.bar(x=return_by_region.index, y=return_by_region.values, 
+                        color=return_by_region.values, color_continuous_scale='Reds')
+            fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400, showlegend=False)
+            st.plotly_chart(fig, use_container_width=True)
+        
+        col1 = st.columns(1)[0]
+        with col1:
+            st.markdown("### Segment vs Category Revenue (Grouped Bar)")
+            segment_cat = filtered_df.pivot_table(values='Total_Amount', index='Customer_Segment', 
+                                                   columns='Category', aggfunc='sum').fillna(0)
+            fig = go.Figure()
+            for col in segment_cat.columns:
+                fig.add_trace(go.Bar(x=segment_cat.index, y=segment_cat[col], name=col))
+            fig.update_layout(barmode='group', plot_bgcolor='rgba(20,20,30,0.3)', height=350)
+            st.plotly_chart(fig, use_container_width=True)
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown("### Satisfaction by Segment")
+            satisfaction = filtered_df.groupby('Customer_Segment')['Satisfaction_Score'].mean().sort_values(ascending=False)
+            fig = px.bar(x=satisfaction.index, y=satisfaction.values, color=satisfaction.values, color_continuous_scale='Greens')
+            fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400, showlegend=False)
+            st.plotly_chart(fig, use_container_width=True)
+        
+        with col2:
+            st.markdown("### Region Performance")
+            region_comp = filtered_df.groupby('Region').agg({'Total_Amount': 'sum', 'Profit': 'sum'}).sort_values('Total_Amount', ascending=False)
+            fig = go.Figure()
+            fig.add_trace(go.Bar(x=region_comp.index, y=region_comp['Total_Amount'], name='Revenue'))
+            fig.add_trace(go.Bar(x=region_comp.index, y=region_comp['Profit'], name='Profit'))
+            fig.update_layout(barmode='group', plot_bgcolor='rgba(20,20,30,0.3)', height=400)
+            st.plotly_chart(fig, use_container_width=True)
+    
+    with tab5:
+        st.markdown("## Health Metrics")
+        
+        col1, col2, col3, col4 = st.columns(4)
+        total_orders = len(filtered_df)
+        unique_customers = filtered_df['Customer_ID'].nunique()
+        cogs = filtered_df['Cost'].sum()
+        nps = filtered_df['Satisfaction_Score'].mean()
+        
+        with col1:
+            st.metric("ðŸ“¦ Orders", f"{total_orders:,}")
+        with col2:
+            st.metric("ðŸ‘¥ Customers", f"{unique_customers:,}")
+        with col3:
+            st.metric("ðŸ’° COGS", f"${cogs:,.0f}")
+        with col4:
+            st.metric("â­ Satisfaction", f"{nps:.1f}/5.0")
+        
+        st.markdown("---")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown("### LTV Distribution (Histogram)")
+            ltv = calculate_ltv(filtered_df)
+            fig = px.histogram(ltv, x='LTV', nbins=50, color_discrete_sequence=['#2E86AB'])
+            fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400)
+            st.plotly_chart(fig, use_container_width=True)
+        
+        with col2:
+            st.markdown("### Health Score (by Category)")
+            health_scores = filtered_df.groupby('Category').agg({
+                'Satisfaction_Score': 'mean',
+                'Total_Amount': 'sum'
+            }).reset_index()
+            health_scores.columns = ['Category', 'Satisfaction_Score', 'Total_Amount']
+            health_scores['Health'] = (health_scores['Satisfaction_Score'] / 5 * 100).round(1)
+            
+            fig = px.bar(health_scores, x='Category', y='Health', color='Health', 
+                        color_continuous_scale='RdYlGn', text='Health')
+            fig.update_traces(texttemplate='%{text:.1f}%', textposition='auto')
+            fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400, showlegend=False)
+            st.plotly_chart(fig, use_container_width=True)
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown("### Return Rates (Scatter)")
+            returns_data = filtered_df.groupby('Category').agg({
+                'Is_Returned': lambda x: (x.sum() / len(x) * 100),
+                'Total_Amount': 'sum',
+                'Order_ID': 'count'
+            }).reset_index()
+            returns_data.columns = ['Category', 'ReturnRate', 'Revenue', 'Orders']
+            
+            fig = px.scatter(returns_data, x='ReturnRate', y='Revenue', size='Orders', 
+                           color='ReturnRate', text='Category', color_continuous_scale='Reds')
+            fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400)
+            st.plotly_chart(fig, use_container_width=True)
+        
+        with col2:
+            st.markdown("### Monthly Revenue Trend")
+            monthly_revenue = filtered_df.groupby('Month')['Total_Amount'].sum()
+            fig = px.line(x=monthly_revenue.index, y=monthly_revenue.values, markers=True, 
+                         color_discrete_sequence=['#2E86AB'])
+            fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400)
+            st.plotly_chart(fig, use_container_width=True)
+    
+    with tab6:
+        st.markdown("## Forecasting & Predictions")
+        
+        forecast_period = st.slider("Forecast Period (days)", min_value=7, max_value=90, value=30)
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown("### Revenue Forecast (Line Chart)")
+            daily_data, forecast_data = forecast_revenue(filtered_df, periods=forecast_period)
+            
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(
+                x=daily_data['Date'], 
+                y=daily_data['Revenue'], 
+                name='Historical',
+                line=dict(color='#2E86AB', width=2)
+            ))
+            
+            if forecast_data is not None:
+                fig.add_trace(go.Scatter(
+                    x=forecast_data['Date'], 
+                    y=forecast_data['Forecast'], 
+                    name='Forecast',
+                    line=dict(color='#F18F01', width=2, dash='dash')
+                ))
+            
+            fig.update_layout(
+                plot_bgcolor='rgba(20,20,30,0.3)',
+                hovermode='x unified',
+                height=400
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        
+        with col2:
+            st.markdown("### Anomalies (Bar Chart)")
+            anomalies = detect_anomalies(filtered_df, threshold=2)
+            
+            if len(anomalies) > 0:
+                anomaly_df = pd.DataFrame({
+                    'Date': anomalies.index,
+                    'Revenue': anomalies.values,
+                    'Type': ['High' if x > filtered_df.groupby(filtered_df['Date'].dt.date)['Total_Amount'].sum().mean() else 'Low' for x in anomalies.values]
+                })
+                
+                fig = px.bar(
+                    anomaly_df, 
+                    x='Date', 
+                    y='Revenue', 
+                    color='Type',
+                    color_discrete_map={'High': '#28a745', 'Low': '#dc3545'}
+                )
+                fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400)
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.info("âœ… No anomalies detected")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown("### Category Forecast Trends")
+            category_daily = filtered_df.groupby(['Date', 'Category'])['Total_Amount'].sum().reset_index()
+            top_categories = filtered_df.groupby('Category')['Total_Amount'].sum().nlargest(3).index
+            
+            fig = go.Figure()
+            for cat in top_categories:
+                cat_data = category_daily[category_daily['Category'] == cat].sort_values('Date')
+                if len(cat_data) > 0:
+                    fig.add_trace(go.Scatter(
+                        x=cat_data['Date'],
+                        y=cat_data['Total_Amount'],
+                        name=cat,
+                        mode='lines',
+                        fill='tozeroy'
+                    ))
+            
+            fig.update_layout(
+                plot_bgcolor='rgba(20,20,30,0.3)',
+                hovermode='x unified',
+                height=400
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        
+        with col2:
+            st.markdown("### Segment Forecast Performance")
+            segment_data = filtered_df.groupby(['Date', 'Customer_Segment'])['Total_Amount'].sum().reset_index()
+            segments = filtered_df['Customer_Segment'].unique()
+            
+            segment_summary = []
+            for seg in segments:
+                seg_data = segment_data[segment_data['Customer_Segment'] == seg]
+                if len(seg_data) > 0:
+                    segment_summary.append({
+                        'Segment': seg,
+                        'Current Revenue': seg_data['Total_Amount'].tail(7).mean(),
+                        'Trend': 'Up' if seg_data['Total_Amount'].tail(7).mean() > seg_data['Total_Amount'].head(7).mean() else 'Down'
+                    })
+            
+            seg_df = pd.DataFrame(segment_summary)
+            fig = px.bar(seg_df, x='Segment', y='Current Revenue', color='Trend',
+                        color_discrete_map={'Up': '#28a745', 'Down': '#dc3545'})
+            fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400)
+            st.plotly_chart(fig, use_container_width=True)
+        
+        st.markdown("---")
+        col1 = st.columns(1)[0]
+        with col1:
+            st.markdown("### Forecast Summary Metrics")
+            daily_data, forecast_data = forecast_revenue(filtered_df, periods=forecast_period)
+            
+            avg_historical = daily_data['Revenue'].mean()
+            avg_forecast = forecast_data['Forecast'].mean() if forecast_data is not None else 0
+            growth_rate = ((avg_forecast - avg_historical) / avg_historical * 100) if avg_historical > 0 else 0
+            anomaly_count = len(detect_anomalies(filtered_df))
+            
+            metric_col1, metric_col2, metric_col3, metric_col4 = st.columns(4)
+            with metric_col1:
+                st.metric("ðŸ“ˆ Historical Avg", f"${avg_historical:,.0f}")
+            with metric_col2:
+                st.metric("ðŸ”® Forecast Avg", f"${avg_forecast:,.0f}")
+            with metric_col3:
+                st.metric("ðŸ“Š Growth Rate", f"{growth_rate:.1f}%")
+            with metric_col4:
+                st.metric("ðŸš¨ Anomalies", f"{anomaly_count}")
+
+except Exception as e:
+    st.error(f"Error: {str(e)}")
+    import traceback
+    st.write(traceback.format_exc())
