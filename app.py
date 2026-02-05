@@ -4,958 +4,454 @@ import plotly.express as px
 import plotly.graph_objects as go
 import numpy as np
 from datetime import datetime, timedelta
-from scipy import stats
 import warnings
 warnings.filterwarnings('ignore')
-import io
 
-st.set_page_config(
-    page_title="Amazon - Analytics Dashboard",
-    page_icon="📊",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+st.set_page_config(page_title="Amazon Analytics", page_icon="📊", layout="wide", initial_sidebar_state="expanded")
 
-# Performance optimization
-@st.cache_resource
-def get_plot_config():
-    return {'responsive': True, 'displayModeBar': False}
+# Custom CSS - Fixed KPI visibility
+st.markdown("""
+<style>
+    .stMetric { background: linear-gradient(135deg, #232526 0%, #414345 100%); padding: 18px; border-radius: 12px; border-left: 5px solid #FF9900; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+    .stMetric label { color: #FFFFFF !important; font-weight: 600; font-size: 14px; }
+    .stMetric [data-testid="stMetricValue"] { color: #FF9900 !important; font-size: 28px !important; font-weight: 700; }
+    .stMetric [data-testid="stMetricDelta"] { color: #00D4AA !important; }
+    .block-container { padding-top: 1rem; }
+    h1, h2, h3 { color: #FF9900; }
+</style>
+""", unsafe_allow_html=True)
 
-# Theme and styling with enhanced customization
-theme_color = st.sidebar.selectbox("Theme", ["Light", "Dark", "Ocean", "Forest", "Sunset"], key="theme")
-
-theme_styles = {
-    "Light": """
-        <style>
-            .stMetric { background-color: #f0f2f6; padding: 15px; border-radius: 5px; color: #1f1f1f; border-left: 4px solid #FF9900; }
-            .stDataFrame { background-color: #ffffff; }
-        </style>
-    """,
-    "Dark": """
-        <style>
-            .stMetric { background-color: #1a1a1a; padding: 15px; border-radius: 5px; color: #ffffff; }
-            .stDataFrame { background-color: #2d2d2d; }
-        </style>
-    """,
-    "Ocean": """
-        <style>
-            .stMetric { background-color: #0a1428; padding: 15px; border-radius: 5px; color: #ffffff; border-left: 4px solid #0dcaf0; }
-            .stDataFrame { background-color: #0f1d2e; }
-        </style>
-    """,
-    "Forest": """
-        <style>
-            .stMetric { background-color: #0d3b1f; padding: 15px; border-radius: 5px; color: #ffffff; border-left: 4px solid #198754; }
-            .stDataFrame { background-color: #1a4d2e; }
-        </style>
-    """,
-    "Sunset": """
-        <style>
-            .stMetric { background-color: #3d1e2c; padding: 15px; border-radius: 5px; color: #ffffff; border-left: 4px solid #f66b6b; }
-            .stDataFrame { background-color: #4a2543; }
-        </style>
-    """
-}
-
-if theme_color in theme_styles:
-    st.markdown(theme_styles[theme_color], unsafe_allow_html=True)
-
-# Add Amazon branding header
-col1, col2 = st.columns([1, 5])
-with col1:
-    st.markdown('''
-    <div style="display: flex; align-items: center; justify-content: center; height: 80px;">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg" width="120" alt="Amazon">
-    </div>
-    ''', unsafe_allow_html=True)
-with col2:
-    st.markdown('<h1 style="margin-top: 20px;">Sales & Analytics Dashboard</h1>', unsafe_allow_html=True)
-
+# Header
+st.markdown('<h1>🛒 Amazon Sales Analytics</h1>', unsafe_allow_html=True)
+st.caption("Real-Time Business Intelligence Dashboard | 50K+ Transactions")
 st.divider()
 
 @st.cache_data
-def generate_ecommerce_data():
-    try:
-        np.random.seed(42)
-        end_date = datetime.now()
-        start_date = end_date - timedelta(days=365)
-        dates = pd.date_range(start=start_date, end=end_date, freq='D')
+def generate_data():
+    np.random.seed(42)
+    dates = pd.date_range(end=datetime.now(), periods=365, freq='D')
+    categories = ['Electronics', 'Books', 'Home & Kitchen', 'Fashion', 'Sports', 'Beauty']
+    products = {
+        'Electronics': ['Fire TV Stick', 'Echo Dot', 'Kindle', 'Ring Doorbell', 'Echo Show'],
+        'Books': ['Fiction Novel', 'Business Book', 'Self-Help', 'Comics', 'Audiobook'],
+        'Home & Kitchen': ['Air Purifier', 'Coffee Maker', 'Bedding Set', 'Cookware', 'Smart Bulbs'],
+        'Fashion': ['Running Shoes', 'Jeans', 'T-Shirt', 'Jacket', 'Backpack'],
+        'Sports': ['Yoga Mat', 'Dumbbells', 'Tent', 'Fitness Tracker', 'Camping Gear'],
+        'Beauty': ['Face Cream', 'Shampoo', 'Perfume', 'Lipstick', 'Moisturizer']
+    }
+    prices = {'Electronics': 89, 'Books': 16, 'Home & Kitchen': 72, 'Fashion': 60, 'Sports': 85, 'Beauty': 23}
+    regions = ['US East', 'US West', 'Europe', 'Asia-Pacific', 'Latin America']
+    segments = ['Prime', 'Regular', 'New']
+    
+    n = 50000
+    data = []
+    for i in range(n):
+        cat = np.random.choice(categories, p=[0.28, 0.12, 0.18, 0.20, 0.12, 0.10])
+        prod = np.random.choice(products[cat])
+        price = prices[cat] * np.random.uniform(0.8, 1.2)
+        qty = np.random.randint(1, 5)
+        segment = np.random.choice(segments, p=[0.45, 0.40, 0.15])
+        discount = np.random.uniform(0.05, 0.12) if segment == 'Prime' else np.random.uniform(0, 0.05)
+        revenue = price * qty * (1 - discount)
+        profit = revenue * np.random.uniform(0.25, 0.45)
+        date = np.random.choice(dates)
         
-        categories = ['Electronics', 'Books & Media', 'Home & Kitchen', 'Fashion', 'Sports & Outdoors', 'Beauty & Personal Care']
+        # Seasonal boost
+        month = pd.Timestamp(date).month
+        if month in [11, 12]: revenue *= 1.5; profit *= 1.3
         
-        # Real Amazon products with actual average prices
-        products = {
-            'Electronics': {
-                'Fire TV Stick': 39.99,
-                'Echo Dot': 49.99,
-                'Kindle': 99.99,
-                'Ring Video Doorbell': 99.99,
-                'Echo Show': 149.99
-            },
-            'Books & Media': {
-                'Science Fiction Novel': 14.99,
-                'Business Book': 19.99,
-                'Self-Help Guide': 16.99,
-                'Comic Book': 12.99,
-                'Audiobook': 17.99
-            },
-            'Home & Kitchen': {
-                'Air Purifier': 89.99,
-                'Coffee Maker': 49.99,
-                'Bedding Set': 79.99,
-                'Cookware': 99.99,
-                'Smart Bulbs': 39.99
-            },
-            'Fashion': {
-                'Running Shoes': 79.99,
-                'Denim Jeans': 49.99,
-                'Cotton T-Shirt': 19.99,
-                'Winter Jacket': 89.99,
-                'Backpack': 59.99
-            },
-            'Sports & Outdoors': {
-                'Yoga Mat': 29.99,
-                'Dumbbells': 24.99,
-                'Tent': 129.99,
-                'Fitness Tracker': 149.99,
-                'Camping Gear': 89.99
-            },
-            'Beauty & Personal Care': {
-                'Face Cream': 24.99,
-                'Shampoo': 12.99,
-                'Perfume': 49.99,
-                'Lipstick': 9.99,
-                'Moisturizer': 19.99
-            }
-        }
-        
-        # Real Amazon regional revenue distribution (based on financial reports)
-        regions = ['US East', 'US West', 'Europe', 'Asia-Pacific', 'Latin America']
-        region_weights = [0.30, 0.20, 0.25, 0.18, 0.07]  # Actual Amazon regional split
-        
-        payment_methods = ['Amazon Wallet', 'Credit/Debit Card', 'Amazon Pay', 'COD']
-        customer_segments = ['Prime Member', 'Regular', 'New']
-        
-        num_transactions = 100000  # 100K transactions
-        data = []
-        
-        for i in range(num_transactions):
-            date = pd.Timestamp(np.random.choice(dates))
-            category_weights = [0.28, 0.12, 0.18, 0.20, 0.12, 0.10]
-            category = np.random.choice(categories, p=category_weights)
-            product = np.random.choice(list(products[category].keys()))
-            unit_price = products[category][product]
-            unit_price = unit_price * np.random.uniform(0.95, 1.05)
-            
-            region = np.random.choice(regions, p=region_weights)
-            payment = np.random.choice(payment_methods)
-            customer_segment = np.random.choice(customer_segments, p=[0.45, 0.40, 0.15])
-            
-            profit_margins_by_category = {
-                'Electronics': (0.35, 0.50),
-                'Books & Media': (0.40, 0.55),
-                'Home & Kitchen': (0.38, 0.52),
-                'Fashion': (0.42, 0.58),
-                'Sports & Outdoors': (0.40, 0.55),
-                'Beauty & Personal Care': (0.38, 0.52)
-            }
-            
-            cost_multiplier = np.random.uniform(*profit_margins_by_category[category])
-            quantity = np.random.randint(1, 6)
-            cost = unit_price * cost_multiplier
-            
-            discount_rate = 0
-            if customer_segment == 'Prime Member':
-                discount_rate = np.random.uniform(0.05, 0.12)
-            elif customer_segment == 'Regular':
-                discount_rate = np.random.uniform(0, 0.05)
-            
-            discount_amount = unit_price * quantity * discount_rate
-            total_amount = (unit_price * quantity) - discount_amount
-            profit = (total_amount - (cost * quantity))
-            
-            month = date.month
-            if month in [11, 12]:
-                if category == 'Electronics':
-                    total_amount *= 2.2
-                    profit *= 1.8
-                elif category == 'Fashion':
-                    total_amount *= 1.6
-                    profit *= 1.4
-                elif category == 'Home & Kitchen':
-                    total_amount *= 1.4
-                    profit *= 1.25
-                else:
-                    total_amount *= 1.35
-                    profit *= 1.2
-            elif month in [6, 7]:
-                if category in ['Electronics', 'Sports & Outdoors']:
-                    total_amount *= 1.4
-                    profit *= 1.2
-            elif month in [1]:
-                if category in ['Sports & Outdoors', 'Beauty & Personal Care']:
-                    total_amount *= 1.2
-                    profit *= 1.1
-            
-            return_rate = 0.07 if customer_segment == 'New' else (0.03 if customer_segment == 'Regular' else 0.01)
-            is_returned = np.random.random() < return_rate
-            
-            satisfaction_base = 4.6 if customer_segment == 'Prime Member' else (4.3 if customer_segment == 'Regular' else 4.0)
-            if is_returned:
-                satisfaction_score = np.random.uniform(2.0, 3.5)
-            else:
-                satisfaction_score = min(5.0, np.random.normal(satisfaction_base, 0.35))
-            satisfaction_score = max(1, round(satisfaction_score, 1))
-            
-            data.append({
-                'Date': date,
-                'Order_ID': f'AMZ{i:08d}',
-                'Category': category,
-                'Product': product,
-                'Region': region,
-                'Payment_Method': payment,
-                'Customer_Segment': customer_segment,
-                'Quantity': quantity,
-                'Unit_Price': round(unit_price, 2),
-                'Discount_Rate': round(discount_rate * 100, 2),
-                'Total_Amount': round(total_amount, 2),
-                'Cost': round(cost * quantity, 2),
-                'Profit': round(profit, 2),
-                'Profit_Margin': round((profit / total_amount * 100), 2) if total_amount > 0 else 0,
-                'Is_Returned': is_returned,
-                'Customer_ID': f'AMZN{np.random.randint(1, 5000):05d}',
-                'Satisfaction_Score': satisfaction_score
-            })
-        
-        df = pd.DataFrame(data)
-        df['Date'] = pd.to_datetime(df['Date'])
-        df['Month'] = df['Date'].dt.to_period('M').astype(str)
-        df['Year'] = df['Date'].dt.year
-        df['Day_of_Week'] = df['Date'].dt.day_name()
-        df['Week'] = df['Date'].dt.isocalendar().week
-        df['Quarter'] = 'Q' + df['Date'].dt.quarter.astype(str)
-        
-        return df
-    except Exception as e:
-        st.error(f"Error generating data: {str(e)}")
-        return pd.DataFrame()
+        data.append({
+            'Date': date, 'Category': cat, 'Product': prod, 
+            'Region': np.random.choice(regions, p=[0.30, 0.20, 0.25, 0.18, 0.07]),
+            'Segment': segment, 'Quantity': qty, 'Revenue': round(revenue, 2),
+            'Profit': round(profit, 2), 'Margin': round(profit/revenue*100, 1),
+            'Returned': np.random.random() < 0.03,
+            'Rating': round(np.clip(np.random.normal(4.3, 0.5), 1, 5), 1),
+            'Customer_ID': f'C{np.random.randint(1, 3000):04d}'
+        })
+    
+    df = pd.DataFrame(data)
+    df['Date'] = pd.to_datetime(df['Date'])
+    df['Month'] = df['Date'].dt.strftime('%Y-%m')
+    df['Day'] = df['Date'].dt.day_name()
+    df['Week'] = df['Date'].dt.to_period('W').apply(lambda x: x.start_time)
+    return df
 
-@st.cache_data
-def calculate_rfm(df):
-    today = df['Date'].max()
-    rfm = df[~df['Is_Returned']].groupby('Customer_ID').agg({
+df = generate_data()
+
+# Sidebar Filters
+st.sidebar.header("🔍 Filters")
+
+# Reset Filters Button
+if st.sidebar.button("🔄 Reset All Filters", use_container_width=True):
+    st.rerun()
+
+st.sidebar.divider()
+date_range = st.sidebar.date_input("Date Range", value=(df['Date'].min(), df['Date'].max()))
+cats = st.sidebar.multiselect("Categories", df['Category'].unique(), default=df['Category'].unique())
+regions = st.sidebar.multiselect("Regions", df['Region'].unique(), default=df['Region'].unique())
+segments = st.sidebar.multiselect("Segments", df['Segment'].unique(), default=df['Segment'].unique())
+
+# Apply filters
+fdf = df[(df['Date'].dt.date >= date_range[0]) & (df['Date'].dt.date <= date_range[1]) & 
+         (df['Category'].isin(cats)) & (df['Region'].isin(regions)) & (df['Segment'].isin(segments))]
+
+# Export
+st.sidebar.divider()
+st.sidebar.download_button("📥 Export CSV", fdf.to_csv(index=False), "amazon_data.csv", "text/csv")
+
+# KPI Row
+st.markdown("### 📊 Key Performance Indicators")
+c1, c2, c3, c4, c5, c6 = st.columns(6)
+c1.metric("💰 Revenue", f"${fdf['Revenue'].sum():,.0f}")
+c2.metric("📈 Profit", f"${fdf['Profit'].sum():,.0f}")
+c3.metric("📦 Orders", f"{len(fdf):,}")
+c4.metric("👥 Customers", f"{fdf['Customer_ID'].nunique():,}")
+c5.metric("💹 Margin", f"{fdf['Profit'].sum()/fdf['Revenue'].sum()*100:.1f}%")
+c6.metric("⭐ Rating", f"{fdf['Rating'].mean():.2f}")
+
+st.divider()
+
+# Tabs - 5 focused sections
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["📊 Overview", "👥 Customers", "📦 Products", "📈 Trends", "🔍 Insights"])
+
+# =============================================================================
+# TAB 1: OVERVIEW (5 charts)
+# =============================================================================
+with tab1:
+    col1, col2 = st.columns(2)
+    
+    # Chart 1: Weekly Revenue & Profit Trend
+    with col1:
+        st.markdown("##### 📈 Weekly Revenue & Profit")
+        weekly = fdf.groupby('Week').agg({'Revenue': 'sum', 'Profit': 'sum'}).reset_index()
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=weekly['Week'], y=weekly['Revenue'], name='Revenue', 
+                                  line=dict(color='#FF9900', width=3), fill='tozeroy'))
+        fig.add_trace(go.Scatter(x=weekly['Week'], y=weekly['Profit'], name='Profit', 
+                                  line=dict(color='#00D4AA', width=3)))
+        fig.update_layout(height=350, template='plotly_dark', hovermode='x unified', margin=dict(t=10))
+        st.plotly_chart(fig, use_container_width=True)
+    
+    # Chart 2: Revenue by Category (Donut)
+    with col2:
+        st.markdown("##### 🎯 Revenue by Category")
+        cat_rev = fdf.groupby('Category')['Revenue'].sum().sort_values(ascending=False)
+        fig = px.pie(values=cat_rev.values, names=cat_rev.index, hole=0.5,
+                     color_discrete_sequence=px.colors.qualitative.Set2)
+        fig.update_layout(height=350, template='plotly_dark', margin=dict(t=10))
+        st.plotly_chart(fig, use_container_width=True)
+    
+    col1, col2 = st.columns(2)
+    
+    # Chart 3: Regional Performance
+    with col1:
+        st.markdown("##### 🌍 Regional Performance")
+        region_data = fdf.groupby('Region').agg({'Revenue': 'sum', 'Profit': 'sum'}).sort_values('Revenue', ascending=True)
+        fig = go.Figure()
+        fig.add_trace(go.Bar(y=region_data.index, x=region_data['Revenue'], name='Revenue', orientation='h', marker_color='#FF9900'))
+        fig.add_trace(go.Bar(y=region_data.index, x=region_data['Profit'], name='Profit', orientation='h', marker_color='#00D4AA'))
+        fig.update_layout(height=300, template='plotly_dark', barmode='group', margin=dict(t=10))
+        st.plotly_chart(fig, use_container_width=True)
+    
+    # Chart 4: Payment by Day of Week (Heatmap-style bar)
+    with col2:
+        st.markdown("##### 📅 Revenue by Day of Week")
+        day_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+        dow = fdf.groupby('Day')['Revenue'].sum().reindex(day_order)
+        fig = px.bar(x=dow.index, y=dow.values, color=dow.values, color_continuous_scale='Oranges')
+        fig.update_layout(height=300, template='plotly_dark', showlegend=False, margin=dict(t=10))
+        fig.update_coloraxes(showscale=False)
+        st.plotly_chart(fig, use_container_width=True)
+    
+    # Chart 5: Category vs Region Heatmap
+    st.markdown("##### 🔥 Revenue Heatmap: Category × Region")
+    heatmap_data = fdf.pivot_table(values='Revenue', index='Region', columns='Category', aggfunc='sum').fillna(0)
+    fig = px.imshow(heatmap_data, text_auto='.0f', color_continuous_scale='YlOrRd', aspect='auto')
+    fig.update_layout(height=280, template='plotly_dark', margin=dict(t=10))
+    st.plotly_chart(fig, use_container_width=True)
+
+# =============================================================================
+# TAB 2: CUSTOMERS (5 charts)
+# =============================================================================
+with tab2:
+    # RFM Analysis
+    today = fdf['Date'].max()
+    rfm = fdf.groupby('Customer_ID').agg({
         'Date': lambda x: (today - x.max()).days,
-        'Order_ID': 'count',
-        'Total_Amount': 'sum'
+        'Revenue': ['count', 'sum']
     }).reset_index()
     rfm.columns = ['Customer_ID', 'Recency', 'Frequency', 'Monetary']
-    try:
-        rfm['R_Score'] = pd.qcut(rfm['Recency'], q=4, labels=[4, 3, 2, 1], duplicates='drop')
-        rfm['F_Score'] = pd.qcut(rfm['Frequency'].rank(method='first'), q=4, labels=[1, 2, 3, 4], duplicates='drop')
-        rfm['M_Score'] = pd.qcut(rfm['Monetary'], q=4, labels=[1, 2, 3, 4], duplicates='drop')
-    except:
-        rfm['R_Score'] = 2
-        rfm['F_Score'] = 2
-        rfm['M_Score'] = 2
-    rfm['RFM_Score'] = rfm['R_Score'].astype(int) + rfm['F_Score'].astype(int) + rfm['M_Score'].astype(int)
-    def segment(score):
-        if score >= 10: return 'Champions'
-        elif score >= 8: return 'Loyal'
-        elif score >= 6: return 'At Risk'
-        else: return 'Lost'
-    rfm['Segment'] = rfm['RFM_Score'].apply(segment)
-    return rfm
-
-def calculate_ltv(df):
-    """Calculate Customer Lifetime Value"""
-    cohort = df.copy()
-    cohort['cohort_month'] = cohort['Date'].dt.to_period('M')
-    cohort_data = cohort.groupby(['Customer_ID', 'cohort_month'])['Total_Amount'].sum().reset_index()
-    ltv = cohort_data.groupby('Customer_ID')['Total_Amount'].sum().reset_index()
-    ltv.columns = ['Customer_ID', 'LTV']
-    return ltv
-
-def forecast_revenue(df, periods=30):
-    """Revenue forecasting using trend analysis"""
-    daily_revenue = df.groupby(df['Date'].dt.date)['Total_Amount'].sum().reset_index()
-    daily_revenue.columns = ['Date', 'Revenue']
-    daily_revenue['Date'] = pd.to_datetime(daily_revenue['Date'])
+    rfm['Score'] = pd.qcut(rfm['Monetary'], 4, labels=[1,2,3,4]).astype(int) + \
+                   pd.qcut(rfm['Frequency'].rank(method='first'), 4, labels=[1,2,3,4]).astype(int)
+    rfm['Segment'] = rfm['Score'].apply(lambda x: 'Champions' if x >= 7 else ('Loyal' if x >= 5 else ('At Risk' if x >= 3 else 'Lost')))
     
-    if len(daily_revenue) < 7:
-        return daily_revenue, None
+    col1, col2 = st.columns(2)
     
-    x = np.arange(len(daily_revenue))
-    y = daily_revenue['Revenue'].values
-    z = np.polyfit(x, y, 2)
+    # Chart 6: RFM Segment Distribution
+    with col1:
+        st.markdown("##### 👥 Customer Segments (RFM)")
+        seg_dist = rfm['Segment'].value_counts()
+        colors = {'Champions': '#00D4AA', 'Loyal': '#FF9900', 'At Risk': '#FFD93D', 'Lost': '#FF6B6B'}
+        fig = px.pie(values=seg_dist.values, names=seg_dist.index, hole=0.5,
+                     color=seg_dist.index, color_discrete_map=colors)
+        fig.update_layout(height=350, template='plotly_dark', margin=dict(t=10))
+        st.plotly_chart(fig, use_container_width=True)
+    
+    # Chart 7: Revenue by Segment
+    with col2:
+        st.markdown("##### 💰 Revenue by Customer Segment")
+        seg_rev = rfm.groupby('Segment')['Monetary'].sum().sort_values(ascending=True)
+        fig = px.bar(y=seg_rev.index, x=seg_rev.values, orientation='h',
+                     color=seg_rev.index, color_discrete_map=colors)
+        fig.update_layout(height=350, template='plotly_dark', showlegend=False, margin=dict(t=10))
+        st.plotly_chart(fig, use_container_width=True)
+    
+    col1, col2 = st.columns(2)
+    
+    # Chart 8: Recency vs Frequency Scatter
+    with col1:
+        st.markdown("##### 🎯 Recency vs Frequency")
+        fig = px.scatter(rfm.sample(min(500, len(rfm))), x='Recency', y='Frequency', 
+                        size='Monetary', color='Segment', color_discrete_map=colors, opacity=0.7)
+        fig.update_layout(height=350, template='plotly_dark', margin=dict(t=10))
+        st.plotly_chart(fig, use_container_width=True)
+    
+    # Chart 9: Customer Rating Distribution
+    with col2:
+        st.markdown("##### ⭐ Rating Distribution")
+        fig = px.histogram(fdf, x='Rating', nbins=20, color_discrete_sequence=['#FF9900'])
+        fig.update_layout(height=350, template='plotly_dark', margin=dict(t=10))
+        st.plotly_chart(fig, use_container_width=True)
+    
+    # Chart 10: Segment Performance Table
+    st.markdown("##### 📊 Segment Performance")
+    seg_perf = fdf.groupby('Segment').agg({
+        'Revenue': 'sum', 'Profit': 'sum', 'Customer_ID': 'nunique', 'Rating': 'mean'
+    }).round(2)
+    seg_perf.columns = ['Revenue ($)', 'Profit ($)', 'Customers', 'Avg Rating']
+    seg_perf['Revenue ($)'] = seg_perf['Revenue ($)'].apply(lambda x: f"${x:,.0f}")
+    seg_perf['Profit ($)'] = seg_perf['Profit ($)'].apply(lambda x: f"${x:,.0f}")
+    st.dataframe(seg_perf, use_container_width=True)
+
+# =============================================================================
+# TAB 3: PRODUCTS (5 charts)
+# =============================================================================
+with tab3:
+    col1, col2 = st.columns(2)
+    
+    # Chart 11: Top 10 Products by Revenue
+    with col1:
+        st.markdown("##### 🏆 Top 10 Products by Revenue")
+        top_prod = fdf.groupby('Product')['Revenue'].sum().nlargest(10).sort_values()
+        fig = px.bar(y=top_prod.index, x=top_prod.values, orientation='h',
+                     color=top_prod.values, color_continuous_scale='Oranges')
+        fig.update_layout(height=400, template='plotly_dark', showlegend=False, margin=dict(t=10))
+        fig.update_coloraxes(showscale=False)
+        st.plotly_chart(fig, use_container_width=True)
+    
+    # Chart 12: Category Profit Margin Box Plot
+    with col2:
+        st.markdown("##### 📦 Profit Margin by Category")
+        fig = px.box(fdf, x='Category', y='Margin', color='Category',
+                     color_discrete_sequence=px.colors.qualitative.Set2)
+        fig.update_layout(height=400, template='plotly_dark', showlegend=False, margin=dict(t=10))
+        st.plotly_chart(fig, use_container_width=True)
+    
+    col1, col2 = st.columns(2)
+    
+    # Chart 13: ABC Analysis
+    with col1:
+        st.markdown("##### 📊 ABC Product Classification")
+        prod_rev = fdf.groupby('Product')['Revenue'].sum().sort_values(ascending=False)
+        cumsum_pct = (prod_rev.cumsum() / prod_rev.sum() * 100)
+        abc = pd.DataFrame({
+            'Product': prod_rev.index[:15],
+            'Revenue': prod_rev.values[:15],
+            'Class': ['A' if p <= 70 else ('B' if p <= 90 else 'C') for p in cumsum_pct.values[:15]]
+        })
+        fig = px.bar(abc, y='Product', x='Revenue', color='Class', orientation='h',
+                     color_discrete_map={'A': '#00D4AA', 'B': '#FFD93D', 'C': '#FF6B6B'})
+        fig.update_layout(height=400, template='plotly_dark', margin=dict(t=10))
+        st.plotly_chart(fig, use_container_width=True)
+    
+    # Chart 14: Category Sales Funnel
+    with col2:
+        st.markdown("##### 🔻 Category Orders Funnel")
+        cat_orders = fdf.groupby('Category')['Revenue'].count().sort_values(ascending=False)
+        fig = px.funnel(y=cat_orders.index, x=cat_orders.values)
+        fig.update_traces(marker_color=['#FF9900', '#FFB347', '#FFD93D', '#00D4AA', '#4ECDC4', '#95E1D3'])
+        fig.update_layout(height=400, template='plotly_dark', margin=dict(t=10))
+        st.plotly_chart(fig, use_container_width=True)
+    
+    # Chart 15: Return Rate by Category
+    st.markdown("##### 🔄 Return Rate by Category")
+    return_rate = fdf.groupby('Category')['Returned'].mean() * 100
+    fig = px.bar(x=return_rate.index, y=return_rate.values, color=return_rate.values,
+                 color_continuous_scale='Reds', text=return_rate.values.round(1))
+    fig.update_traces(texttemplate='%{text:.1f}%', textposition='outside')
+    fig.update_layout(height=280, template='plotly_dark', showlegend=False, margin=dict(t=10))
+    fig.update_coloraxes(showscale=False)
+    fig.update_yaxes(title='Return Rate (%)')
+    st.plotly_chart(fig, use_container_width=True)
+
+# =============================================================================
+# TAB 4: TRENDS & FORECASTING (5 charts)
+# =============================================================================
+with tab4:
+    col1, col2 = st.columns(2)
+    
+    # Chart 16: Monthly Revenue Trend with Moving Average
+    with col1:
+        st.markdown("##### 📈 Monthly Revenue Trend")
+        monthly = fdf.groupby('Month')['Revenue'].sum().reset_index()
+        monthly['MA'] = monthly['Revenue'].rolling(3, min_periods=1).mean()
+        fig = go.Figure()
+        fig.add_trace(go.Bar(x=monthly['Month'], y=monthly['Revenue'], name='Revenue', marker_color='#FF9900', opacity=0.7))
+        fig.add_trace(go.Scatter(x=monthly['Month'], y=monthly['MA'], name='3-Month MA', line=dict(color='#00D4AA', width=3)))
+        fig.update_layout(height=350, template='plotly_dark', hovermode='x unified', margin=dict(t=10))
+        st.plotly_chart(fig, use_container_width=True)
+    
+    # Chart 17: Category Trend (Stacked Area)
+    with col2:
+        st.markdown("##### 📊 Category Revenue Over Time")
+        cat_monthly = fdf.groupby(['Month', 'Category'])['Revenue'].sum().reset_index()
+        fig = px.area(cat_monthly, x='Month', y='Revenue', color='Category',
+                      color_discrete_sequence=px.colors.qualitative.Set2)
+        fig.update_layout(height=350, template='plotly_dark', margin=dict(t=10))
+        st.plotly_chart(fig, use_container_width=True)
+    
+    col1, col2 = st.columns(2)
+    
+    # Chart 18: Segment Growth Comparison
+    with col1:
+        st.markdown("##### 👥 Segment Revenue Trend")
+        seg_monthly = fdf.groupby(['Month', 'Segment'])['Revenue'].sum().reset_index()
+        fig = px.line(seg_monthly, x='Month', y='Revenue', color='Segment', markers=True,
+                      color_discrete_map={'Prime': '#FF9900', 'Regular': '#00D4AA', 'New': '#4ECDC4'})
+        fig.update_layout(height=350, template='plotly_dark', hovermode='x unified', margin=dict(t=10))
+        st.plotly_chart(fig, use_container_width=True)
+    
+    # Chart 19: Profit Trend by Region
+    with col2:
+        st.markdown("##### 🌍 Regional Profit Trend")
+        reg_monthly = fdf.groupby(['Month', 'Region'])['Profit'].sum().reset_index()
+        fig = px.line(reg_monthly, x='Month', y='Profit', color='Region', markers=True)
+        fig.update_layout(height=350, template='plotly_dark', hovermode='x unified', margin=dict(t=10))
+        st.plotly_chart(fig, use_container_width=True)
+    
+    # Chart 20: Revenue Forecast
+    st.markdown("##### 🔮 Revenue Forecast (Next 30 Days)")
+    daily = fdf.groupby(fdf['Date'].dt.date)['Revenue'].sum().reset_index()
+    daily.columns = ['Date', 'Revenue']
+    daily['Date'] = pd.to_datetime(daily['Date'])
+    
+    # Simple trend forecast
+    x = np.arange(len(daily))
+    z = np.polyfit(x, daily['Revenue'].values, 1)
     p = np.poly1d(z)
     
-    future_x = np.arange(len(daily_revenue), len(daily_revenue) + periods)
-    forecast_values = p(future_x)
+    future_x = np.arange(len(daily), len(daily) + 30)
+    future_dates = [daily['Date'].max() + timedelta(days=i) for i in range(1, 31)]
+    forecast = pd.DataFrame({'Date': future_dates, 'Forecast': np.maximum(p(future_x), 0)})
     
-    last_date = daily_revenue['Date'].max()
-    future_dates = [last_date + timedelta(days=i) for i in range(1, periods + 1)]
-    forecast_df = pd.DataFrame({
-        'Date': future_dates,
-        'Forecast': np.maximum(forecast_values, 0)
-    })
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=daily['Date'], y=daily['Revenue'], name='Historical', 
+                              line=dict(color='#FF9900', width=2), fill='tozeroy', fillcolor='rgba(255,153,0,0.2)'))
+    fig.add_trace(go.Scatter(x=forecast['Date'], y=forecast['Forecast'], name='Forecast',
+                              line=dict(color='#00D4AA', width=3, dash='dash')))
+    fig.update_layout(height=350, template='plotly_dark', hovermode='x unified', margin=dict(t=10))
+    st.plotly_chart(fig, use_container_width=True)
     
-    return daily_revenue, forecast_df
+    # Forecast metrics
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("📊 Avg Daily Revenue", f"${daily['Revenue'].mean():,.0f}")
+    c2.metric("🔮 Forecast Avg", f"${forecast['Forecast'].mean():,.0f}")
+    c3.metric("📈 Trend", f"{(p[1]/daily['Revenue'].mean()*100):+.1f}%/day")
+    c4.metric("🎯 30-Day Projection", f"${forecast['Forecast'].sum():,.0f}")
 
-def detect_anomalies(df, threshold=2):
-    """Detect anomalies in daily revenue"""
-    daily_revenue = df.groupby(df['Date'].dt.date)['Total_Amount'].sum()
-    mean = daily_revenue.mean()
-    std = daily_revenue.std()
+# =============================================================================
+# TAB 5: INSIGHTS (4 charts)
+# =============================================================================
+with tab5:
+    st.markdown("### 💡 Business Insights & Analysis")
     
-    anomalies = daily_revenue[
-        (daily_revenue > mean + threshold * std) | 
-        (daily_revenue < mean - threshold * std)
-    ]
+    # Key Insights Cards
+    col1, col2, col3 = st.columns(3)
     
-    return anomalies
-
-def generate_insights(df):
-    """Generate automatic business insights"""
-    insights = []
+    top_cat = fdf.groupby('Category')['Revenue'].sum().idxmax()
+    top_cat_pct = fdf.groupby('Category')['Revenue'].sum().max() / fdf['Revenue'].sum() * 100
+    top_region = fdf.groupby('Region')['Revenue'].sum().idxmax()
+    return_rate = fdf['Returned'].mean() * 100
     
-    try:
-        top_category = df.groupby('Category')['Total_Amount'].sum().idxmax()
-        top_cat_pct = (df[df['Category'] == top_category]['Total_Amount'].sum() / df['Total_Amount'].sum() * 100)
-        insights.append(f"🏆 **{top_category}** leads with {top_cat_pct:.1f}% of revenue")
-        
-        top_region = df.groupby('Region')['Total_Amount'].sum().idxmax()
-        insights.append(f"📍 **{top_region}** is top region")
-        
-        # Calculate margin as profit/revenue, not average of Profit_Margin column
-        total_profit = df['Profit'].sum()
-        total_revenue = df['Total_Amount'].sum()
-        profit_margin = (total_profit / total_revenue * 100) if total_revenue > 0 else 0
-        insights.append(f"📈 Profit margin: **{profit_margin:.1f}%**")
-        
-        return_rate = (df['Is_Returned'].sum() / len(df) * 100)
-        insights.append(f"📦 Return rate: **{return_rate:.1f}%**")
-        
-        avg_satisfaction = df['Satisfaction_Score'].mean()
-        insights.append(f"⭐ Satisfaction: **{avg_satisfaction:.1f}**/5")
-        
-        aov = df['Total_Amount'].mean()
-        insights.append(f"💳 AOV: **${aov:.2f}**")
-    except:
-        insights = ["No insights available"]
+    with col1:
+        st.success(f"🏆 **Top Category**: {top_cat} ({top_cat_pct:.1f}% of revenue)")
+    with col2:
+        st.info(f"🌍 **Leading Region**: {top_region}")
+    with col3:
+        st.warning(f"📦 **Return Rate**: {return_rate:.2f}%")
     
-    return insights
-
-try:
-    df = generate_ecommerce_data()
+    st.divider()
     
-    if df.empty:
-        st.error("Failed to load data")
-        st.stop()
+    col1, col2 = st.columns(2)
     
-    st.markdown("**Amazon.com, Inc.** | Global E-Commerce & Technology | Real-Time Business Analytics")
+    # Chart: Revenue vs Rating Correlation
+    with col1:
+        st.markdown("##### ⭐ Revenue vs Customer Rating")
+        rating_rev = fdf.groupby(fdf['Rating'].round()).agg({'Revenue': 'sum', 'Profit': 'sum'}).reset_index()
+        fig = px.scatter(rating_rev, x='Rating', y='Revenue', size='Profit', 
+                        color='Revenue', color_continuous_scale='Oranges')
+        fig.update_layout(height=350, template='plotly_dark', margin=dict(t=10))
+        st.plotly_chart(fig, use_container_width=True)
     
-    st.sidebar.header("Global Filters")
+    # Chart: Return Rate by Category
+    with col2:
+        st.markdown("##### 🔄 Return Analysis by Category")
+        returns = fdf.groupby('Category').agg({
+            'Returned': lambda x: x.mean() * 100,
+            'Revenue': 'sum'
+        }).reset_index()
+        returns.columns = ['Category', 'Return_Rate', 'Revenue']
+        fig = px.bar(returns, x='Category', y='Return_Rate', color='Revenue',
+                    color_continuous_scale='RdYlGn_r', text='Return_Rate')
+        fig.update_traces(texttemplate='%{text:.1f}%', textposition='outside')
+        fig.update_layout(height=350, template='plotly_dark', margin=dict(t=10))
+        fig.update_yaxes(title='Return Rate (%)')
+        st.plotly_chart(fig, use_container_width=True)
     
-    min_date = df['Date'].min().date()
-    max_date = df['Date'].max().date()
+    col1, col2 = st.columns(2)
     
-    date_range = st.sidebar.date_input("Select Date Range", value=(min_date, max_date), min_value=min_date, max_value=max_date)
-    categories_filter = st.sidebar.multiselect("Categories", sorted(df['Category'].unique()), default=df['Category'].unique())
-    regions_filter = st.sidebar.multiselect("Regions", sorted(df['Region'].unique()), default=df['Region'].unique())
-    segments_filter = st.sidebar.multiselect("Customer Segments", sorted(df['Customer_Segment'].unique()), default=df['Customer_Segment'].unique())
-    
-    enable_comparison = st.sidebar.checkbox("Compare with Previous Period", value=False)
-    comparison_period_days = st.sidebar.slider("Period Length (days)", min_value=7, max_value=180, value=30) if enable_comparison else 0
-    
-    if len(date_range) == 2:
-        filtered_df = df[
-            (df['Date'].dt.date >= date_range[0]) & 
-            (df['Date'].dt.date <= date_range[1]) &
-            (df['Category'].isin(categories_filter)) &
-            (df['Region'].isin(regions_filter)) &
-            (df['Customer_Segment'].isin(segments_filter))
-        ]
+    # Chart: Segment Comparison Radar
+    with col1:
+        st.markdown("##### 📊 Segment Performance Comparison")
+        seg_metrics = fdf.groupby('Segment').agg({
+            'Revenue': 'sum', 'Profit': 'sum', 'Rating': 'mean', 'Quantity': 'sum'
+        }).reset_index()
+        # Normalize for radar
+        for col in ['Revenue', 'Profit', 'Rating', 'Quantity']:
+            seg_metrics[col] = (seg_metrics[col] - seg_metrics[col].min()) / (seg_metrics[col].max() - seg_metrics[col].min() + 0.001) * 100
         
-        if enable_comparison and comparison_period_days > 0:
-            comparison_start = datetime.combine(date_range[0], datetime.min.time()) - timedelta(days=comparison_period_days)
-            comparison_end = datetime.combine(date_range[0], datetime.min.time()) - timedelta(days=1)
-            comparison_df = df[
-                (df['Date'] >= comparison_start) & 
-                (df['Date'] <= comparison_end) &
-                (df['Category'].isin(categories_filter)) &
-                (df['Region'].isin(regions_filter)) &
-                (df['Customer_Segment'].isin(segments_filter))
-            ]
-        else:
-            comparison_df = pd.DataFrame()
-    else:
-        filtered_df = df[
-            (df['Category'].isin(categories_filter)) &
-            (df['Region'].isin(regions_filter)) &
-            (df['Customer_Segment'].isin(segments_filter))
-        ]
-        comparison_df = pd.DataFrame()
-    
-    st.sidebar.markdown("---")
-    st.sidebar.subheader("Export Data")
-    if st.sidebar.button("Download Filtered Data (CSV)"):
-        csv = filtered_df.to_csv(index=False)
-        st.sidebar.download_button(
-            label="Click to download CSV",
-            data=csv,
-            file_name=f"amazon_sales_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-            mime="text/csv"
-        )
-    
-    st.sidebar.markdown("---")
-    st.sidebar.subheader("Data Quality")
-    
-    data_quality_col1, data_quality_col2 = st.sidebar.columns(2)
-    with data_quality_col1:
-        completeness = (1 - (filtered_df.isnull().sum().sum() / (len(filtered_df) * len(filtered_df.columns)))) * 100
-        st.metric("Completeness", f"{completeness:.1f}%")
-    
-    with data_quality_col2:
-        duplicate_rate = (filtered_df.duplicated().sum() / len(filtered_df) * 100) if len(filtered_df) > 0 else 0
-        st.metric("Duplicates", f"{duplicate_rate:.2f}%")
-    
-    data_quality_col1, data_quality_col2 = st.sidebar.columns(2)
-    with data_quality_col1:
-        total_records = len(filtered_df)
-        st.metric("Records", f"{total_records:,}")
-    
-    with data_quality_col2:
-        date_range_days = (filtered_df['Date'].max() - filtered_df['Date'].min()).days
-        st.metric("Date Range", f"{date_range_days} days")
-    
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
-        "Executive Dashboard",
-        "Customer Analytics", 
-        "Products & Trends",
-        "Advanced Analysis",
-        "Health Metrics",
-        "Forecasting"
-    ])
-    
-    with tab1:
-        st.markdown("## Executive Summary & KPIs")
-        
-        col1, col2, col3, col4, col5 = st.columns(5)
-        total_revenue = filtered_df['Total_Amount'].sum()
-        total_profit = filtered_df['Profit'].sum()
-        
-        if not comparison_df.empty:
-            prev_revenue = comparison_df['Total_Amount'].sum()
-            prev_profit = comparison_df['Profit'].sum()
-            revenue_change = ((total_revenue - prev_revenue) / prev_revenue * 100) if prev_revenue > 0 else 0
-            profit_change = ((total_profit - prev_profit) / prev_profit * 100) if prev_profit > 0 else 0
-        else:
-            revenue_change = None
-            profit_change = None
-        
-        with col1:
-            st.metric("💰 Revenue", f"${total_revenue:,.0f}", delta=f"{revenue_change:.1f}%" if revenue_change is not None else None)
-        with col2:
-            st.metric("📊 Profit", f"${total_profit:,.0f}", delta=f"{profit_change:.1f}%" if profit_change is not None else None)
-        with col3:
-            st.metric("📦 Orders", f"{len(filtered_df):,}")
-        with col4:
-            st.metric("👥 Customers", f"{filtered_df['Customer_ID'].nunique():,}")
-        with col5:
-            st.metric("📈 Margin %", f"{(total_profit/total_revenue*100):.1f}%")
-        
-        st.markdown("---")
-        
-        st.markdown("### 💡 Key Insights")
-        insights = generate_insights(filtered_df)
-        cols = st.columns(3)
-        for idx, insight in enumerate(insights):
-            with cols[idx % 3]:
-                st.info(insight)
-        
-        st.markdown("---")
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            st.markdown("### Weekly Revenue & Profit")
-            weekly = filtered_df.copy()
-            weekly['Week'] = weekly['Date'].dt.to_period('W').apply(lambda r: r.start_time)
-            weekly_data = weekly.groupby('Week').agg({'Total_Amount': 'sum', 'Profit': 'sum'}).reset_index()
-            fig = go.Figure()
-            fig.add_trace(go.Scatter(x=weekly_data['Week'], y=weekly_data['Total_Amount'], name='Revenue', line=dict(color='#2E86AB', width=3), mode='lines+markers'))
-            fig.add_trace(go.Scatter(x=weekly_data['Week'], y=weekly_data['Profit'], name='Profit', line=dict(color='#A23B72', width=3), mode='lines+markers'))
-            fig.update_xaxes(title_text="Week")
-            fig.update_yaxes(title_text="Amount ($)")
-            fig.update_layout(hovermode='x unified', plot_bgcolor='rgba(20,20,30,0.3)', height=400)
-            st.plotly_chart(fig, use_container_width=True)
-        
-        with col2:
-            st.markdown("### Revenue by Category")
-            cat_rev = filtered_df.groupby('Category')['Total_Amount'].sum().sort_values(ascending=False)
-            fig = px.pie(values=cat_rev.values, names=cat_rev.index)
-            fig.update_layout(height=400)
-            st.plotly_chart(fig, use_container_width=True)
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            st.markdown("### Top 10 Products")
-            top_products = filtered_df.groupby('Product')['Total_Amount'].sum().nlargest(10)
-            fig = px.bar(x=top_products.values, y=top_products.index, orientation='h', 
-                        color=top_products.values, color_continuous_scale='Blues')
-            fig.update_xaxes(title_text="Revenue ($)")
-            fig.update_yaxes(title_text="Product")
-            fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400, showlegend=False)
-            st.plotly_chart(fig, use_container_width=True)
-        
-        with col2:
-            st.markdown("### Revenue Distribution by Category")
-            fig = go.Figure()
-            for category in filtered_df['Category'].unique():
-                cat_data = filtered_df[filtered_df['Category'] == category]['Total_Amount']
-                fig.add_trace(go.Box(y=cat_data, name=category))
-            fig.update_yaxes(title_text="Revenue ($)")
-            fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400)
-            st.plotly_chart(fig, use_container_width=True)
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            st.markdown("### Orders by Day of Week")
-            dow_data = filtered_df.groupby('Day_of_Week')['Total_Amount'].sum().reindex(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])
-            fig = px.bar(x=dow_data.index, y=dow_data.values, color=dow_data.values, color_continuous_scale='Reds')
-            fig.update_xaxes(title_text="Day of Week")
-            fig.update_yaxes(title_text="Revenue ($)")
-            fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400, showlegend=False)
-            st.plotly_chart(fig, use_container_width=True)
-        
-        with col2:
-            st.markdown("### Payment Methods Distribution")
-            payment_data = filtered_df.groupby('Payment_Method')['Total_Amount'].sum()
-            fig = px.pie(values=payment_data.values, names=payment_data.index, hole=0.4)
-            fig.update_layout(height=400)
-            st.plotly_chart(fig, use_container_width=True)
-    
-    with tab2:
-        st.markdown("## Customer Segmentation & Behavior")
-        
-        rfm = calculate_rfm(filtered_df)
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            st.markdown("### RFM Segments Distribution")
-            seg_dist = rfm['Segment'].value_counts()
-            fig = px.pie(values=seg_dist.values, names=seg_dist.index, hole=0.4)
-            fig.update_layout(height=400)
-            st.plotly_chart(fig, use_container_width=True)
-        
-        with col2:
-            st.markdown("### Total Value by Segment")
-            seg_monetary = rfm.groupby('Segment')['Monetary'].sum().sort_values(ascending=False)
-            fig = px.bar(x=seg_monetary.index, y=seg_monetary.values, color=seg_monetary.values, color_continuous_scale='Reds')
-            fig.update_xaxes(title_text="Segment")
-            fig.update_yaxes(title_text="Total Value ($)")
-            fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400, showlegend=False)
-            st.plotly_chart(fig, use_container_width=True)
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            st.markdown("### Satisfaction by Customer Segment")
-            scatter_data = filtered_df.groupby('Customer_Segment').agg({
-                'Satisfaction_Score': 'mean',
-                'Total_Amount': 'sum'
-            }).reset_index()
-            fig = px.scatter(scatter_data, x='Customer_Segment', y='Satisfaction_Score', 
-                           size='Total_Amount', color='Satisfaction_Score', color_continuous_scale='Greens')
-            fig.update_xaxes(title_text="Customer Segment")
-            fig.update_yaxes(title_text="Average Satisfaction Score")
-            fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400)
-            st.plotly_chart(fig, use_container_width=True)
-        
-        with col2:
-            st.markdown("### Customer Frequency Distribution")
-            freq_range = pd.cut(rfm['Frequency'], bins=5, labels=['Very Low', 'Low', 'Medium', 'High', 'Very High'])
-            freq_dist = freq_range.value_counts().sort_index()
-            fig = px.bar(x=freq_dist.index.astype(str), y=freq_dist.values, color=freq_dist.values, 
-                        color_continuous_scale='Blues')
-            fig.update_xaxes(title_text="Purchase Frequency Level")
-            fig.update_yaxes(title_text="Number of Customers")
-            fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400, showlegend=False)
-            st.plotly_chart(fig, use_container_width=True)
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            st.markdown("### Recency vs Frequency")
-            fig = px.scatter(rfm, x='Recency', y='Frequency', color='Monetary', 
-                           size='Monetary', color_continuous_scale='Viridis', hover_data=['Segment'])
-            fig.update_xaxes(title_text="Days Since Last Purchase (Recency)")
-            fig.update_yaxes(title_text="Purchase Frequency")
-            fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400)
-            st.plotly_chart(fig, use_container_width=True)
-        
-        with col2:
-            st.markdown("### Segment Performance Summary")
-            segment_perf = filtered_df.groupby('Customer_Segment').agg({
-                'Total_Amount': 'sum',
-                'Profit': 'sum',
-                'Order_ID': 'count',
-                'Satisfaction_Score': 'mean'
-            }).round(2)
-            segment_perf.columns = ['Revenue', 'Profit', 'Orders', 'Satisfaction']
-            st.dataframe(segment_perf, use_container_width=True)
-    
-    with tab3:
-        st.markdown("## Products & Trends")
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            st.markdown("### Top 10 Best-Selling Products")
-            top_products = filtered_df['Product'].value_counts().head(10)
-            fig = px.bar(x=top_products.values, y=top_products.index, orientation='h', 
-                        color=top_products.values, color_continuous_scale='Teal')
-            fig.update_xaxes(title_text="Number of Orders")
-            fig.update_yaxes(title_text="Product Name")
-            fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400, showlegend=False)
-            st.plotly_chart(fig, use_container_width=True)
-        
-        with col2:
-            st.markdown("### Monthly Revenue Trend")
-            monthly = filtered_df.groupby('Month').agg({'Total_Amount': 'sum', 'Profit': 'sum'}).reset_index()
-            fig = px.line(monthly, x='Month', y=['Total_Amount', 'Profit'], markers=True)
-            fig.update_xaxes(title_text="Month")
-            fig.update_yaxes(title_text="Amount ($)")
-            fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', hovermode='x unified', height=400)
-            st.plotly_chart(fig, use_container_width=True)
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            st.markdown("### Category Performance (Funnel)")
-            cat_orders = filtered_df.groupby('Category')['Order_ID'].count().sort_values(ascending=False)
-            fig = px.funnel(x=cat_orders.values, y=cat_orders.index)
-            fig.update_xaxes(title_text="Number of Orders")
-            fig.update_yaxes(title_text="Category")
-            fig.update_traces(marker_color='#2E86AB')
-            fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400)
-            st.plotly_chart(fig, use_container_width=True)
-        
-        with col2:
-            st.markdown("### Profit Margin by Category")
-            fig = px.box(filtered_df, x='Category', y='Profit_Margin', color='Category')
-            fig.update_xaxes(title_text="Category")
-            fig.update_yaxes(title_text="Profit Margin (%)")
-            fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400, showlegend=False)
-            st.plotly_chart(fig, use_container_width=True)
-        
-        col1 = st.columns(1)[0]
-        with col1:
-            st.markdown("### ABC Classification (Top 15 Products)")
-            product_rev = filtered_df.groupby('Product')['Total_Amount'].sum().sort_values(ascending=False).head(15)
-            cumsum = product_rev.cumsum()
-            cumsum_pct = (cumsum / cumsum.iloc[-1]) * 100
-            abc_class = ['A' if p <= 80 else ('B' if p <= 95 else 'C') for p in cumsum_pct]
-            abc_df = pd.DataFrame({'Product': product_rev.index, 'Revenue': product_rev.values, 'Class': abc_class})
-            fig = px.bar(abc_df, x='Revenue', y='Product', color='Class', 
-                        color_discrete_map={'A': '#4CAF50', 'B': '#FFC107', 'C': '#F44336'}, 
-                        orientation='h')
-            fig.update_xaxes(title_text="Revenue ($)")
-            fig.update_yaxes(title_text="Product Name")
-            fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400)
-            st.plotly_chart(fig, use_container_width=True)
-        
-        col2 = st.columns(1)[0]
-        with col2:
-            st.markdown("### Average Profit Margin by Category")
-            margin_by_cat = filtered_df.groupby('Category')['Profit_Margin'].mean().sort_values(ascending=False)
-            fig = px.bar(x=margin_by_cat.index, y=margin_by_cat.values, color=margin_by_cat.values, color_continuous_scale='RdYlGn')
-            fig.update_xaxes(title_text="Category")
-            fig.update_yaxes(title_text="Average Profit Margin (%)")
-            fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400, showlegend=False)
-            st.plotly_chart(fig, use_container_width=True)
-    
-    with tab4:
-        st.markdown("## Advanced Analytics")
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            st.markdown("### Revenue Distribution by Category")
-            cat_revenue = filtered_df.groupby('Category')['Total_Amount'].sum().sort_values(ascending=False)
-            fig = px.pie(values=cat_revenue.values, names=cat_revenue.index, hole=0.3)
-            fig.update_layout(height=400)
-            st.plotly_chart(fig, use_container_width=True)
-        
-        with col2:
-            st.markdown("### Revenue by Region")
-            region_revenue = filtered_df.groupby('Region')['Total_Amount'].sum().sort_values(ascending=False)
-            fig = px.bar(x=region_revenue.index, y=region_revenue.values, color=region_revenue.values, color_continuous_scale='Blues')
-            fig.update_xaxes(title_text="Region")
-            fig.update_yaxes(title_text="Revenue ($)")
-            fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400, showlegend=False)
-            st.plotly_chart(fig, use_container_width=True)
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            st.markdown("### Satisfaction vs Revenue by Region")
-            corr_data = filtered_df.groupby('Region').agg({
-                'Satisfaction_Score': 'mean',
-                'Total_Amount': 'sum'
-            }).reset_index()
-            fig = px.scatter(corr_data, x='Total_Amount', y='Satisfaction_Score', 
-                           size='Satisfaction_Score', color='Satisfaction_Score',
-                           color_continuous_scale='Greens', text='Region')
-            fig.update_xaxes(title_text="Total Revenue ($)")
-            fig.update_yaxes(title_text="Average Satisfaction Score")
-            fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400)
-            st.plotly_chart(fig, use_container_width=True)
-        
-        with col2:
-            st.markdown("### Return Rate by Region")
-            return_by_region = filtered_df.groupby('Region')['Is_Returned'].apply(
-                lambda x: (x.sum() / len(x) * 100)).sort_values(ascending=False)
-            fig = px.bar(x=return_by_region.index, y=return_by_region.values, 
-                        color=return_by_region.values, color_continuous_scale='Reds')
-            fig.update_xaxes(title_text="Region")
-            fig.update_yaxes(title_text="Return Rate (%)")
-            fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400, showlegend=False)
-            st.plotly_chart(fig, use_container_width=True)
-        
-        col1 = st.columns(1)[0]
-        with col1:
-            st.markdown("### Revenue by Customer Segment and Category")
-            segment_cat = filtered_df.pivot_table(values='Total_Amount', index='Customer_Segment', 
-                                                   columns='Category', aggfunc='sum').fillna(0)
-            fig = go.Figure()
-            for col in segment_cat.columns:
-                fig.add_trace(go.Bar(x=segment_cat.index, y=segment_cat[col], name=col))
-            fig.update_xaxes(title_text="Customer Segment")
-            fig.update_yaxes(title_text="Revenue ($)")
-            fig.update_layout(barmode='group', plot_bgcolor='rgba(20,20,30,0.3)', height=350)
-            st.plotly_chart(fig, use_container_width=True)
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            st.markdown("### Average Satisfaction by Customer Segment")
-            satisfaction = filtered_df.groupby('Customer_Segment')['Satisfaction_Score'].mean().sort_values(ascending=False)
-            fig = px.bar(x=satisfaction.index, y=satisfaction.values, color=satisfaction.values, color_continuous_scale='Greens')
-            fig.update_xaxes(title_text="Customer Segment")
-            fig.update_yaxes(title_text="Average Satisfaction Score")
-            fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400, showlegend=False)
-            st.plotly_chart(fig, use_container_width=True)
-        
-        with col2:
-            st.markdown("### Region Performance Comparison")
-            region_comp = filtered_df.groupby('Region').agg({'Total_Amount': 'sum', 'Profit': 'sum'}).sort_values('Total_Amount', ascending=False)
-            fig = go.Figure()
-            fig.add_trace(go.Bar(x=region_comp.index, y=region_comp['Total_Amount'], name='Revenue'))
-            fig.add_trace(go.Bar(x=region_comp.index, y=region_comp['Profit'], name='Profit'))
-            fig.update_xaxes(title_text="Region")
-            fig.update_yaxes(title_text="Amount ($)")
-            fig.update_layout(barmode='group', plot_bgcolor='rgba(20,20,30,0.3)', height=400)
-            st.plotly_chart(fig, use_container_width=True)
-    
-    with tab5:
-        st.markdown("## Health Metrics")
-        
-        col1, col2, col3, col4 = st.columns(4)
-        total_orders = len(filtered_df)
-        unique_customers = filtered_df['Customer_ID'].nunique()
-        cogs = filtered_df['Cost'].sum()
-        nps = filtered_df['Satisfaction_Score'].mean()
-        
-        with col1:
-            st.metric("📦 Orders", f"{total_orders:,}")
-        with col2:
-            st.metric("👥 Customers", f"{unique_customers:,}")
-        with col3:
-            st.metric("💰 COGS", f"${cogs:,.0f}")
-        with col4:
-            st.metric("⭐ Satisfaction", f"{nps:.1f}/5.0")
-        
-        st.markdown("---")
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            st.markdown("### Customer Lifetime Value Distribution")
-            ltv = calculate_ltv(filtered_df)
-            fig = px.histogram(ltv, x='LTV', nbins=50, color_discrete_sequence=['#2E86AB'])
-            fig.update_xaxes(title_text="Customer Lifetime Value ($)")
-            fig.update_yaxes(title_text="Number of Customers")
-            fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400)
-            st.plotly_chart(fig, use_container_width=True)
-        
-        with col2:
-            st.markdown("### Health Score by Category")
-            health_scores = filtered_df.groupby('Category').agg({
-                'Satisfaction_Score': 'mean',
-                'Total_Amount': 'sum'
-            }).reset_index()
-            health_scores.columns = ['Category', 'Satisfaction_Score', 'Total_Amount']
-            health_scores['Health'] = (health_scores['Satisfaction_Score'] / 5 * 100).round(1)
-            
-            fig = px.bar(health_scores, x='Category', y='Health', color='Health', 
-                        color_continuous_scale='RdYlGn', text='Health')
-            fig.update_traces(texttemplate='%{text:.1f}%', textposition='auto')
-            fig.update_xaxes(title_text="Category")
-            fig.update_yaxes(title_text="Health Score (%)")
-            fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400, showlegend=False)
-            st.plotly_chart(fig, use_container_width=True)
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            st.markdown("### Return Rates by Category")
-            returns_data = filtered_df.groupby('Category').agg({
-                'Is_Returned': lambda x: (x.sum() / len(x) * 100),
-                'Total_Amount': 'sum',
-                'Order_ID': 'count'
-            }).reset_index()
-            returns_data.columns = ['Category', 'ReturnRate', 'Revenue', 'Orders']
-            
-            fig = px.scatter(returns_data, x='ReturnRate', y='Revenue', size='Orders', 
-                           color='ReturnRate', text='Category', color_continuous_scale='Reds')
-            fig.update_xaxes(title_text="Return Rate (%)")
-            fig.update_yaxes(title_text="Revenue ($)")
-            fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400)
-            st.plotly_chart(fig, use_container_width=True)
-        
-        with col2:
-            st.markdown("### Monthly Revenue Trend")
-            monthly_revenue = filtered_df.groupby('Month')['Total_Amount'].sum()
-            fig = px.line(x=monthly_revenue.index, y=monthly_revenue.values, markers=True, 
-                         color_discrete_sequence=['#2E86AB'])
-            fig.update_xaxes(title_text="Month")
-            fig.update_yaxes(title_text="Revenue ($)")
-            fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400)
-            st.plotly_chart(fig, use_container_width=True)
-    
-    with tab6:
-        st.markdown("## Forecasting & Predictions")
-        
-        forecast_period = st.slider("Forecast Period (days)", min_value=7, max_value=90, value=30)
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            st.markdown("### Revenue Forecast")
-            daily_data, forecast_data = forecast_revenue(filtered_df, periods=forecast_period)
-            
-            fig = go.Figure()
-            fig.add_trace(go.Scatter(
-                x=daily_data['Date'], 
-                y=daily_data['Revenue'], 
-                name='Historical',
-                line=dict(color='#2E86AB', width=2)
+        fig = go.Figure()
+        categories_radar = ['Revenue', 'Profit', 'Rating', 'Quantity']
+        for _, row in seg_metrics.iterrows():
+            fig.add_trace(go.Scatterpolar(
+                r=[row['Revenue'], row['Profit'], row['Rating'], row['Quantity']],
+                theta=categories_radar, fill='toself', name=row['Segment']
             ))
-            
-            if forecast_data is not None:
-                fig.add_trace(go.Scatter(
-                    x=forecast_data['Date'], 
-                    y=forecast_data['Forecast'], 
-                    name='Forecast',
-                    line=dict(color='#F18F01', width=2, dash='dash')
-                ))
-            
-            fig.update_xaxes(title_text="Date")
-            fig.update_yaxes(title_text="Revenue ($)")
-            fig.update_layout(
-                plot_bgcolor='rgba(20,20,30,0.3)',
-                hovermode='x unified',
-                height=400
-            )
-            st.plotly_chart(fig, use_container_width=True)
-        
-        with col2:
-            st.markdown("### Anomalies Detection")
-            anomalies = detect_anomalies(filtered_df, threshold=2)
-            
-            if len(anomalies) > 0:
-                anomaly_df = pd.DataFrame({
-                    'Date': anomalies.index,
-                    'Revenue': anomalies.values,
-                    'Type': ['High' if x > filtered_df.groupby(filtered_df['Date'].dt.date)['Total_Amount'].sum().mean() else 'Low' for x in anomalies.values]
-                })
-                
-                fig = px.bar(
-                    anomaly_df, 
-                    x='Date', 
-                    y='Revenue', 
-                    color='Type',
-                    color_discrete_map={'High': '#28a745', 'Low': '#dc3545'}
-                )
-                fig.update_xaxes(title_text="Date")
-                fig.update_yaxes(title_text="Revenue ($)")
-                fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400)
-                st.plotly_chart(fig, use_container_width=True)
-            else:
-                st.info("No anomalies detected")
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            st.markdown("### Top 3 Category Revenue Trends")
-            category_daily = filtered_df.groupby(['Date', 'Category'])['Total_Amount'].sum().reset_index()
-            top_categories = filtered_df.groupby('Category')['Total_Amount'].sum().nlargest(3).index
-            
-            fig = go.Figure()
-            for cat in top_categories:
-                cat_data = category_daily[category_daily['Category'] == cat].sort_values('Date')
-                if len(cat_data) > 0:
-                    fig.add_trace(go.Scatter(
-                        x=cat_data['Date'],
-                        y=cat_data['Total_Amount'],
-                        name=cat,
-                        mode='lines',
-                        fill='tozeroy'
-                    ))
-            
-            fig.update_xaxes(title_text="Date")
-            fig.update_yaxes(title_text="Revenue ($)")
-            fig.update_layout(
-                plot_bgcolor='rgba(20,20,30,0.3)',
-                hovermode='x unified',
-                height=400
-            )
-            st.plotly_chart(fig, use_container_width=True)
-        
-        with col2:
-            st.markdown("### Customer Segment Revenue Performance")
-            segment_data = filtered_df.groupby(['Date', 'Customer_Segment'])['Total_Amount'].sum().reset_index()
-            segments = filtered_df['Customer_Segment'].unique()
-            
-            segment_summary = []
-            for seg in segments:
-                seg_data = segment_data[segment_data['Customer_Segment'] == seg]
-                if len(seg_data) > 0:
-                    segment_summary.append({
-                        'Segment': seg,
-                        'Current Revenue': seg_data['Total_Amount'].tail(7).mean(),
-                        'Trend': 'Up' if seg_data['Total_Amount'].tail(7).mean() > seg_data['Total_Amount'].head(7).mean() else 'Down'
-                    })
-            
-            seg_df = pd.DataFrame(segment_summary)
-            fig = px.bar(seg_df, x='Segment', y='Current Revenue', color='Trend',
-                        color_discrete_map={'Up': '#28a745', 'Down': '#dc3545'})
-            fig.update_xaxes(title_text="Customer Segment")
-            fig.update_yaxes(title_text="Average Revenue ($)")
-            fig.update_layout(plot_bgcolor='rgba(20,20,30,0.3)', height=400)
-            st.plotly_chart(fig, use_container_width=True)
-        
-        st.markdown("---")
-        col1 = st.columns(1)[0]
-        with col1:
-            st.markdown("### Forecast Summary Metrics")
-            daily_data, forecast_data = forecast_revenue(filtered_df, periods=forecast_period)
-            
-            avg_historical = daily_data['Revenue'].mean()
-            avg_forecast = forecast_data['Forecast'].mean() if forecast_data is not None else 0
-            growth_rate = ((avg_forecast - avg_historical) / avg_historical * 100) if avg_historical > 0 else 0
-            anomaly_count = len(detect_anomalies(filtered_df))
-            
-            metric_col1, metric_col2, metric_col3, metric_col4 = st.columns(4)
-            with metric_col1:
-                st.metric("📊 Historical Avg", f"${avg_historical:,.0f}")
-            with metric_col2:
-                st.metric("🔮 Forecast Avg", f"${avg_forecast:,.0f}")
-            with metric_col3:
-                st.metric("📈 Growth Rate", f"{growth_rate:.1f}%")
-            with metric_col4:
-                st.metric("⚠️ Anomalies", f"{anomaly_count}")
+        fig.update_layout(height=350, template='plotly_dark', margin=dict(t=30), 
+                         polar=dict(radialaxis=dict(visible=True, range=[0, 100])))
+        st.plotly_chart(fig, use_container_width=True)
+    
+    # Chart: Top Products Table
+    with col2:
+        st.markdown("##### 🏅 Top 10 Products Performance")
+        top_prods = fdf.groupby('Product').agg({
+            'Revenue': 'sum', 'Profit': 'sum', 'Quantity': 'sum', 'Rating': 'mean'
+        }).nlargest(10, 'Revenue').round(2)
+        top_prods['Revenue'] = top_prods['Revenue'].apply(lambda x: f"${x:,.0f}")
+        top_prods['Profit'] = top_prods['Profit'].apply(lambda x: f"${x:,.0f}")
+        top_prods['Rating'] = top_prods['Rating'].apply(lambda x: f"⭐ {x:.1f}")
+        st.dataframe(top_prods, use_container_width=True, height=350)
 
-except Exception as e:
-    st.error(f"Error: {str(e)}")
-    import traceback
-    st.write(traceback.format_exc())
+st.divider()
+st.caption("📊 Amazon Analytics Dashboard | 20 Interactive Visualizations | Data refreshes on filter change")
